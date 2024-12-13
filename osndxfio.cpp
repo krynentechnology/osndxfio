@@ -536,11 +536,11 @@ bool OSNDXFIO::create( const STRING     in_databaseName,
         record.size  = sizeof( header ) + keyDescriptorSize;
 
         // Data header initialization.
-    header.reservedIndexRecords = in_reservedIndexRecords;
-    header.nrOfIndexRecords = header.reservedIndexRecords;
+        header.reservedIndexRecords = in_reservedIndexRecords;
+        header.nrOfIndexRecords = header.reservedIndexRecords;
         header.nextFreeIndex = sizeof( record /* header id */ ) + record.size +
                                sizeof( record /* index id */ );
-    header.nextFreeData = header.nextFreeIndex + ( header.reservedIndexRecords *
+        header.nextFreeData = header.nextFreeIndex + ( header.reservedIndexRecords *
                               ( sizeof( sINDEX ) + totalKeySize )) +
                               sizeof( record ); /* next index id */
         header.nrOfKeys = in_nrOfKeys;
@@ -585,7 +585,7 @@ bool OSNDXFIO::close()
 {
     if ( NULL != m_handle )
     {
-        if ( !m_handle->fileHandle.close())
+        if ( !m_handle->fileHandle.close() )
         {
             m_error = NO_DATABASE;
         }
@@ -618,7 +618,7 @@ bool OSNDXFIO::close()
         m_handle = NULL;
     }
 
-    return (m_error != NO_DATABASE);
+    return ( m_error != NO_DATABASE );
 }
 
 /*============================================================================*/
@@ -750,7 +750,7 @@ bool OSNDXFIO::createRecord( sRECORD& in_rRecord,
         data.offset      = index.dataOffset + sizeof( data ) + in_rRecord.dataSize;
     }
 
-    if (statusOk)
+    if ( statusOk )
     {
         m_error = DATABASE_IO_ERROR;
         // Write data id record.
@@ -766,7 +766,7 @@ bool OSNDXFIO::createRecord( sRECORD& in_rRecord,
 
     U32 prevNrOfRecords = header.nrOfRecords;
 
-    if (statusOk)
+    if ( statusOk )
     {
         // Set record counter and reference.
         header.nrOfRecords++;
@@ -1612,3 +1612,4 @@ static void swap( U32* pU32 )
     ::memcpy(( (BYTE*)pU32 + 1 ), ( (BYTE*)pU32 + 2 ), 1 );
     ::memcpy(( (BYTE*)pU32 + 2 ), &copy, 1 );
 }
+

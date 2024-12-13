@@ -1,21 +1,20 @@
 /**
  *  Copyright (C) 2024, Kees Krijnen.
- *   
+ *
  *  This program is free software: you can redistribute it and/or modify it
- *  under the terms of the GNU Lesser General Public License as published by the
- *  Free Software Foundation, either version 3 of the License, or (at your
- *  option) any later version.
+ *  under the terms of the GNU General Public License as published by the Free
+ *  Software Foundation, either version 3 of the License, or (at your option)
+ *  any later version.
  *
  *  This program is distributed WITHOUT ANY WARRANTY; without even the implied
  *  warranty of MERCHANTIBILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU Lesser General Public License for more details.
+ *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU Lesser General Public License
- *  along with this program. If not, see <https://www.gnu.org/licenses/> for a
- *  copy.
+ *  You should have received a copy of the GNU General Public License along with
+ *  this program. If not, see <https://www.gnu.org/licenses/> for a copy.
  *
- *  License: LGPL, v3, as defined and found on www.gnu.org,
- *           https://www.gnu.org/licenses/lgpl-3.0.html
+ *  License: GPL, v3, as defined and found on www.gnu.org,
+ *           https://www.gnu.org/licenses/gpl-3.0.html
  */
 
 // ---- system includes ----
@@ -88,31 +87,31 @@ bool test1( void )
 /*============================================================================*/
 {
     printDescription( 1, "Create, open, close and delete file" );
-    
+
     // check for file exist
     bool status_ok = !handle.open( file_name, READ_ONLY_ACCESS );
-    
+
     if ( !status_ok )
     {
-      status_ok = handle.close();
-      status_ok = status_ok && handle.erase( file_name );
-      status_ok = status_ok && !handle.open( file_name, READ_ONLY_ACCESS );
+        status_ok = handle.close();
+        status_ok = status_ok && handle.erase( file_name );
+        status_ok = status_ok && !handle.open( file_name, READ_ONLY_ACCESS );
     }
-    
+
     status_ok = status_ok && handle.create( file_name );
-    
+
     status_ok = status_ok && handle.close();
-    
+
     status_ok = status_ok && handle.open( file_name );
-    
+
     status_ok = status_ok && ( handle.timestamp() != (U32)INVALID_VALUE );
-    
+
     status_ok = status_ok && handle.close();
-    
+
     handle.close(); // close anyway
-    
+
     status_ok = status_ok && handle.erase( file_name );
-    
+
     return status_ok;
 }
 
@@ -125,56 +124,56 @@ bool test2( void )
 /*============================================================================*/
 {
     printDescription( 2, "Read and write file" );
-    
+
     bool status_ok = !handle.open( file_name, READ_ONLY_ACCESS );
-    
+
     if ( !status_ok )
     {
-      status_ok = handle.close();
-      status_ok = status_ok && handle.erase( file_name );
-      status_ok = status_ok && !handle.open( file_name, READ_ONLY_ACCESS );
+        status_ok = handle.close();
+        status_ok = status_ok && handle.erase( file_name );
+        status_ok = status_ok && !handle.open( file_name, READ_ONLY_ACCESS );
     }
-    
+
     status_ok = status_ok && handle.create( file_name );
-    
+
     status_ok = status_ok && handle.close();
-    
+
     status_ok = status_ok && handle.open( file_name );
-    
+
     for ( int i = 0; i < sizeof( test_data1 ); i++ )
     {
-      test_data1[ i ] = (BYTE)i;
+        test_data1[ i ] = (BYTE)i;
     }
-    
+
     memset( test_data2, 0, DATA_SIZE );
-    
+
     status_ok = status_ok && (( file_pointer = handle.position() ) !=
-      (U32)INVALID_VALUE );
-    
+        (U32)INVALID_VALUE );
+
     status_ok = status_ok && ( file_pointer == 0);
-    
+
     status_ok = status_ok && handle.write( test_data1, DATA_SIZE );
-    
+
     status_ok = status_ok && (( file_size = handle.size() ) !=
       (U32)INVALID_VALUE );
-    
+
     status_ok = status_ok && ( file_size == DATA_SIZE );
-    
+
     status_ok = status_ok && (( file_pointer = handle.position() ) !=
       (U32)INVALID_VALUE );
-    
+
     status_ok = status_ok && ( file_size == file_pointer );
-    
+
     status_ok = status_ok && handle.read( 0, test_data2, DATA_SIZE );
-    
+
     status_ok = status_ok && ( memcmp( test_data1, test_data2, DATA_SIZE ) == 0 );
-    
+
     status_ok = status_ok && handle.eof();
-    
+
     status_ok = status_ok && !handle.read( test_data2, 1 );
-    
+
     handle.close(); // close anyway
-    
+
     return status_ok;
 }
 
@@ -187,52 +186,52 @@ bool  test3( void )
 /*============================================================================*/
 {
     printDescription( 3, "Append write file" );
-    
+
     bool status_ok = handle.open( file_name, READ_WRITE_ACCESS );
-    
+
     status_ok = status_ok && (( file_pointer = handle.position() ) !=
-      (U32)INVALID_VALUE );
-    
+        (U32)INVALID_VALUE );
+
     status_ok = status_ok && ( file_pointer == 0 );
-    
+
     status_ok = status_ok && handle.write( EOF_POSITION, test_data1, DATA_SIZE );
-    
+
     status_ok = status_ok && (( file_size = handle.size() ) !=
-      (U32)INVALID_VALUE );
-    
+        (U32)INVALID_VALUE );
+
     status_ok = status_ok && ( file_size == ( 2 * DATA_SIZE ) );
-    
+
     status_ok = status_ok && (( file_pointer = handle.position() ) !=
-      (U32)INVALID_VALUE );
-    
+        (U32)INVALID_VALUE );
+
     status_ok = status_ok && ( file_size == file_pointer );
-    
+
     status_ok = status_ok && handle.read( DATA_SIZE, test_data2, DATA_SIZE );
-    
+
     status_ok = status_ok && ( memcmp( test_data1, test_data2, DATA_SIZE ) == 0 );
-    
+
     status_ok = status_ok && handle.eof();
-    
+
     status_ok = status_ok && !handle.read( test_data2, 1 );
-    
+
     status_ok = status_ok && handle.truncate( DATA_SIZE );
-    
+
     status_ok = status_ok && (( file_size = handle.size() ) !=
-      (U32)INVALID_VALUE );
-    
+        (U32)INVALID_VALUE );
+
     status_ok = status_ok && ( file_size == DATA_SIZE );
-    
+
     status_ok = status_ok && (( file_pointer = handle.position() ) !=
-      (U32)INVALID_VALUE );
-    
+        (U32)INVALID_VALUE );
+
     status_ok = status_ok && ( file_size == file_pointer );
-    
+
     status_ok = status_ok && !handle.truncate( DATA_SIZE );
-    
+
     status_ok = status_ok && !handle.read( test_data2, 1 );
-    
+
     handle.close(); // close anyway
-    
+
     return status_ok;
 }
 
@@ -246,15 +245,16 @@ int main()
     ::printf( "OSDEF size of type U32 = %d\n", sizeof( U32 ));
     ::printf( "OSDEF size of type STRING = %d\n", sizeof( STRING ));
     ::printf( "OSDEF size of type POINTER = %d\n\n", sizeof( POINTER ));
-    
+
     printResult( test1() );
     printResult( test2() );
     printResult( test3() );
     handle.erase( file_name );
-    
+
     ::printf( "\nOSFIO TEST %d passed, %d failed, stopped at %s\n\n",
       passedCounter, failedCounter, ::ctime( &startTime ));
-    
+
     // WAIT_FOR_KEYPRESSED;
     return 0;
 }
+

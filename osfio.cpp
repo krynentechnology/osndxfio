@@ -242,3 +242,4 @@ U32 OSFIO::timestamp()
     
     return (U32)INVALID_VALUE;
 }
+

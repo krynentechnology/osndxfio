@@ -465,4 +465,3 @@ OSNDXFIO& operator=( OSNDXFIO& const invalid );
 };
 #endif // OSNDXFIO_HPP
 
-

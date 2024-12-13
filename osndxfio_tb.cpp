@@ -1,21 +1,20 @@
 /**
  *  Copyright (C) 2024, Kees Krijnen.
- *   
+ *
  *  This program is free software: you can redistribute it and/or modify it
- *  under the terms of the GNU Lesser General Public License as published by the
- *  Free Software Foundation, either version 3 of the License, or (at your
- *  option) any later version.
+ *  under the terms of the GNU General Public License as published by the Free
+ *  Software Foundation, either version 3 of the License, or (at your option)
+ *  any later version.
  *
  *  This program is distributed WITHOUT ANY WARRANTY; without even the implied
  *  warranty of MERCHANTIBILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU Lesser General Public License for more details.
+ *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU Lesser General Public License
- *  along with this program. If not, see <https://www.gnu.org/licenses/> for a
- *  copy.
+ *  You should have received a copy of the GNU General Public License along with
+ *  this program. If not, see <https://www.gnu.org/licenses/> for a copy.
  *
- *  License: LGPL, v3, as defined and found on www.gnu.org,
- *           https://www.gnu.org/licenses/lgpl-3.0.html
+ *  License: GPL, v3, as defined and found on www.gnu.org,
+ *           https://www.gnu.org/licenses/gpl-3.0.html
  */
 
 // ---- system includes ----
@@ -68,12 +67,12 @@ static sTEST_OBJECT testObjects[ maxRecords ];
 #define OFFSET_NAME       sizeof( U32 )     
 static OSNDXFIO::sKEY_SEGMENT key1[ 2 ] =
     { OSNDXFIO::sKEY_SEGMENT( OSNDXFIO::tBYTE, OFFSET_DEPARTMENT, SIZE_OF_DEPARTMENT ),
-      OSNDXFIO::sKEY_SEGMENT( OSNDXFIO::tBYTE, OFFSET_NAME, SIZE_OF_NAME ) };
+        OSNDXFIO::sKEY_SEGMENT( OSNDXFIO::tBYTE, OFFSET_NAME, SIZE_OF_NAME ) };
 static OSNDXFIO::sKEY_SEGMENT key2[ 1 ] =
     { OSNDXFIO::sKEY_SEGMENT( OSNDXFIO::tU32, 0, sizeof( U32 )) };
 static OSNDXFIO::sKEY_SEGMENT key3[ 2 ] =
     { OSNDXFIO::sKEY_SEGMENT( OSNDXFIO::tBYTE, OFFSET_NAME, SIZE_OF_NAME ),
-      OSNDXFIO::sKEY_SEGMENT( OSNDXFIO::tU32, 0, sizeof( U32 )) };
+        OSNDXFIO::sKEY_SEGMENT( OSNDXFIO::tU32, 0, sizeof( U32 )) };
 
 static STRING database1 = "testDb1.dat";
 
@@ -87,7 +86,7 @@ void printResult( bool passed )
 /*============================================================================*/
 {
     ::printf( "- %s\n", passed ? "Passed" : "Failed" );
-    
+
     if ( passed )
     {
         passedCounter++;
@@ -104,17 +103,17 @@ void printDescription( U16 testNumber, const STRING description )
 {
     static struct timeb systemTime;
     struct tm*          pLocalTime;
-    
+
     ::ftime( &systemTime );
     pLocalTime = ::localtime( &systemTime.time );
-    
+
     ::printf( "%02d:%02d:%02d.%03d OSNDXFIO T%-5d ",
     pLocalTime->tm_hour,
     pLocalTime->tm_min,
     pLocalTime->tm_sec,
     systemTime.millitm,
     testNumber );
-    
+
     ::printf( "%s ", description );
 }
 
@@ -123,14 +122,14 @@ void getNextObject( sTEST_OBJECT& object )
 /*============================================================================*/
 {
     ::memset( &object, 0, sizeof( object ));
-    
+
     object.id = ::rand() % MAX_NB_IDS;
     generatedIds[ object.id ]++;
-    
+
     int randomName = ::rand() % MAX_NB_NAMES;
     ::sprintf( object.name, "MY-NAME-%02d", randomName );
     generatedNames[ randomName ]++;
-    
+
     int randomDepartment = ::rand() % MAX_NB_DEPARTMENTS;
     ::sprintf( object.department, "MY_DEPARTMENT-%d", randomDepartment );
     generatedDepartments[ randomDepartment ]++;
@@ -145,11 +144,12 @@ bool test1( void )
 /*============================================================================*/
 {
     printDescription( 1, "Create and close empty database" );
-    
+
     OSNDXFIO::sKEY_SEGMENT key[ 2 ] =
-    { OSNDXFIO::sKEY_SEGMENT( OSNDXFIO::tBYTE, 0, SIZE_OF_NAME  ),
-    OSNDXFIO::sKEY_SEGMENT( OSNDXFIO::tBYTE, ( SIZE_OF_NAME - 1 ), SIZE_OF_DEPARTMENT ) }; // Overlap of data segments.
-    
+        { OSNDXFIO::sKEY_SEGMENT( OSNDXFIO::tBYTE, 0, SIZE_OF_NAME  ),
+        OSNDXFIO::sKEY_SEGMENT( OSNDXFIO::tBYTE, ( SIZE_OF_NAME - 1 ),
+        SIZE_OF_DEPARTMENT ) }; // Overlap of data segments.
+
     OSNDXFIO::sKEY_DESC keyDesc[ 3 ];
     keyDesc[ 0 ].nrOfSegments = NR_ELEMENTS( key );
     keyDesc[ 0 ].apSegment    = key;
@@ -157,9 +157,9 @@ bool test1( void )
     keyDesc[ 1 ].apSegment    = ::key2;
     keyDesc[ 2 ].nrOfSegments = NR_ELEMENTS( ::key3 );
     keyDesc[ 2 ].apSegment    = ::key2;
-    
+
     (void)OSFIO::erase( database1 ); // If exist, erase test database.
-    
+
     OSNDXFIO testDb;
     // Try to open non-existing database and check last error.
     bool statusOk = !testDb.open( database1 ); // Fails!
@@ -167,7 +167,7 @@ bool test1( void )
     // Try to create database with invalid key descriptor and check last error.
     statusOk = statusOk && !testDb.create( database1, NR_ELEMENTS( keyDesc ), keyDesc ); // Fails!
     statusOk = statusOk && ( testDb.getLastError() == OSNDXFIO::INVALID_KEY_DESCRIPTOR );
-    
+
     keyDesc[ 0 ].nrOfSegments = NR_ELEMENTS( ::key1 );
     keyDesc[ 0 ].apSegment    = ::key1;
     // Create database with valid key descriptor and try to open it.
@@ -179,7 +179,7 @@ bool test1( void )
     statusOk = statusOk && !testDb.create( database1, NR_ELEMENTS( keyDesc ), keyDesc ); // Fails!
     statusOk = statusOk && ( testDb.getLastError() == OSNDXFIO::DATABASE_ALREADY_EXIST ); // Check last error.
     (void)testDb.close();
-    
+
     return statusOk;
 }
 
@@ -192,11 +192,11 @@ bool test2( void )
 /*============================================================================*/
 {
     printDescription( 2, "Open empty database and create records" );
-    
+
     OSNDXFIO testDb;
     // Open existing empty database.
     bool statusOk = testDb.open( database1 );
-    
+
     // Clear testObject array;
     ::memset( testObjects, 0, sizeof( testObjects ));
     // Create maxRecords records.
@@ -206,15 +206,15 @@ bool test2( void )
         OSNDXFIO::sRECORD testRecord( sizeof( sTEST_OBJECT ), 0, sizeof( sTEST_OBJECT ), (BYTE*)&testObject );
         getNextObject( testObject );
         testObjects[ i ] = testObject;
-        
+
         U32 index = 0;
         statusOk = testDb.createRecord( testRecord, index );
     }
-    
+
     statusOk = statusOk && ( testDb.getNrOfRecords() == maxRecords );
     statusOk = statusOk && testDb.close();
     (void)testDb.close();
-    
+
     return statusOk;
 }
 
@@ -227,14 +227,14 @@ bool test3( void )
 /*============================================================================*/
 {
     printDescription( 3, "Open created database and read all records" );
-    
+
     OSNDXFIO testDb;
     // Open created database.
     bool statusOk = testDb.open( database1 );
     sTEST_OBJECT testObject;
     OSNDXFIO::sRECORD testRecord( sizeof( sTEST_OBJECT ), 0, 0, (BYTE*)&testObject );
     U32 nbRecords = 0;
-    
+
     // Read all records and compare.
     for ( U32 i = 0; ( statusOk && ( i < testDb.getNrOfRecords() )); i++ )
     {
@@ -244,17 +244,17 @@ bool test3( void )
         statusOk = statusOk && ( U32( sizeof( sTEST_OBJECT )) == testRecord.dataSize );
         // Compare with testObject array.
         statusOk = statusOk && ( ::memcmp( &testObject, &testObjects[ i ], sizeof( testObject )) == 0 );
-        
+
         if ( statusOk )
         {
             nbRecords++;
         }
     }
-    
+
     statusOk = statusOk && ( testDb.getNrOfRecords() == nbRecords );
     statusOk = statusOk && testDb.close();
     (void)testDb.close();
-    
+
     return statusOk;
 }
 
@@ -267,14 +267,14 @@ bool test4( void )
 /*============================================================================*/
 {
     printDescription( 4, "Retrieving records by (partial) key" );
-    
+
     OSNDXFIO testDb;
     // Open created database.
     bool statusOk = testDb.open( database1 );
     sTEST_OBJECT testObject;
     OSNDXFIO::sRECORD testRecord( sizeof( sTEST_OBJECT ), 0, 0, (BYTE*)&testObject );
     U32 nbRecords = 0;
-    
+
     for ( U16 i = 0; ( statusOk && ( i < MAX_NB_IDS )); i++ )
     {
         if ( generatedIds[ i ] )
@@ -286,7 +286,7 @@ bool test4( void )
             statusOk = statusOk && testDb.getRecord( index, testRecord );
             // Compare with testObject array.
             statusOk = statusOk && ( ::memcmp( &testObject, &testObjects[ index ], sizeof( testObject )) == 0 );
-            
+
             if ( statusOk )
             {
                 U32 recordCount = testDb.getSearchCount( key );
@@ -296,12 +296,12 @@ bool test4( void )
                     // Compare with testObject array.
                     statusOk = statusOk && ( ::memcmp( &testObject, &testObjects[ index ], sizeof( testObject )) == 0 );
                 }
-                
+
                 nbRecords += recordCount;
             }
         }
     }
-    
+
     statusOk = statusOk && ( testDb.getNrOfRecords() == nbRecords );
     nbRecords = 0;
     // Partial key retrieval.
@@ -318,7 +318,7 @@ bool test4( void )
             statusOk = statusOk && testDb.getRecord( index, testRecord );
             // Compare with testObject array.
             statusOk = statusOk && ( ::memcmp( &testObject, &testObjects[ index ], sizeof( testObject )) == 0 );
-            
+
             if ( statusOk )
             {
                 U32 recordCount = testDb.getSearchCount( key );
@@ -328,16 +328,16 @@ bool test4( void )
                     // Compare with testObject array.
                     statusOk = statusOk && ( ::memcmp( &testObject, &testObjects[ index ], sizeof( testObject )) == 0 );
                 }
-                
+
                 nbRecords += recordCount;
             }
         }
     }
-    
+
     statusOk = statusOk && ( testDb.getNrOfRecords() == nbRecords );
     statusOk = statusOk && testDb.close();
     (void)testDb.close();
-    
+
     return statusOk;
 }
 
@@ -353,14 +353,15 @@ int main()
     ::printf( "OSNDXFIO size of type sKEY_SEGMENT = %d\n", sizeof( OSNDXFIO::sKEY_SEGMENT ));
     ::printf( "OSNDXFIO size of type sKEY_DESC = %d\n", sizeof( OSNDXFIO::sKEY_DESC ));
     ::printf( "OSNDXFIO size of type sRECORD = %d\n\n", sizeof( OSNDXFIO::sRECORD ));
-    
+
     printResult( test1());
     printResult( test2());
     printResult( test3());
     printResult( test4());
-    
+
     ::printf( "\nOSNDXFIO TEST %d passed, %d failed, stopped at %s\n\n", passedCounter, failedCounter, ::ctime( &startTime ));
-    
+
     // WAIT_FOR_KEYPRESSED;
     return 0;
 }
+

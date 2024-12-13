@@ -2,7 +2,7 @@
 #define OSDEF_H
 /**
  *  Copyright (C) 2024, Kees Krijnen.
- *   
+ *
  *  This program is free software: you can redistribute it and/or modify it
  *  under the terms of the GNU Lesser General Public License as published by the
  *  Free Software Foundation, either version 3 of the License, or (at your
@@ -26,7 +26,7 @@
 
 #ifdef __CPPBUILDERIDE__
 #ifdef __cplusplus
-  using namespace std;
+using namespace std;
 #endif
 #endif
 
@@ -81,3 +81,4 @@ typedef long double           R80;
 #define WAIT_FOR_KEYPRESSED   getch()
 
 #endif /* OSDEF_H */
+

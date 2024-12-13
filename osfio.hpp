@@ -167,3 +167,4 @@ private:
 HANDLE m_handle;
 };
 #endif  // OSFIO_HPP
+
