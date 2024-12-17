@@ -15,6 +15,8 @@
  *
  *  License: GPL, v3, as defined and found on www.gnu.org,
  *           https://www.gnu.org/licenses/gpl-3.0.html
+ *
+ *  Description: OSFIO test bench
  */
 
 // ---- system includes ----
@@ -47,7 +49,7 @@ void printResult( bool passed )
 /*============================================================================*/
 {
     ::printf( "- %s\n", passed ? "Passed" : "Failed" );
-    
+
     if ( passed )
     {
       passedCounter++;
@@ -64,17 +66,17 @@ void printDescription( U16 testNumber, const STRING description )
 {
     static struct timeb systemTime;
     struct tm*          pLocalTime;
-    
+
     ::ftime( &systemTime );
     pLocalTime = ::localtime( &systemTime.time );
-    
+
     ::printf( "%02d:%02d:%02d.%03d OSFIO T%-5d ",
       pLocalTime->tm_hour,
       pLocalTime->tm_min,
       pLocalTime->tm_sec,
       systemTime.millitm,
       testNumber );
-    
+
     ::printf( "%s ", description );
 }
 

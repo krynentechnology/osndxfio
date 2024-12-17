@@ -53,35 +53,30 @@
 #include <osndxfio.hpp>
 
 // ---- local symbol definitions ----
-#define NDXFIO_VERSION    0x01000000 // major.minor.patch - major, minor = 8 bits
-#define MAX_MALLOC        (1 << 30)  // maximum memory allocation 2**30
+#define NDXFIO_VERSION  0x01000000 // major.minor.patch - major, minor = 8 bits
+#define MAX_MALLOC      (1 << 30)  // maximum memory allocation 2**30
 
 /** Index record status. Do not modify or erase regarding backward
     compatibility! */
 enum eINDEX_STATUS
 {
-    eOK       = 1, // Used for file storage.
-    eLOCKED   = 2, // Used for memory index.
-    eDELETED  = 3, // Used for file storage.
-    eRESERVED = 4  // Used for file storage.
+    eRESERVED = -2, // Used for file storage.
+    eOK       = -1, // Used for file storage.
+    eDELETED  = 0   // Index id >= 0.
 };
 
 /** Index structure. The index structure is followed by the application key. */
 struct sINDEX
 {
-    U32 status;               // Status of the index record
     union
     {
-        U32 offset;           // Byte offset of index record in the file
-        U32 prevDeletedIndex; // The offset is not valid when record is deleted.
-    };                        // If deleted this field points to previous deleted
-                              // record. Contains 0 no deleted records available.
+        S32 status;           // Status of the index record
+        S32 prevDeletedIndex; // The offset is not valid when record is deleted.
+    };                        // If >= zero this field points to the previous
+                              // deleted record.
+    U32 offset;               // Byte offset of index record in the file
     U32 dataOffset;           // Byte offset of data record in the file
-    union
-    {
-        U32 dataSize;           // Size of the object in the file, see offset.
-        U32 largestSizeDeleted; // Size of the next largest deleted size, see
-    };                          // prevDeletedIndex.
+    U32 dataSize;             // Size of the object in the file, see offset.
     U32 recordRef;            // Verification reference for data records.
     /** KEY **/               // Start of application key
 
@@ -131,8 +126,7 @@ struct sHEADER
     U32 nrOfRecords;        // Number of all valid records (status == eOK).
     U32 nrOfIndexRecords;   // Total of all index records,
                             // status == eOK, eDELETED, eRESERVED.
-    U32 firstDeletedIndex;  // Offset to first deleted index record.
-    U32 largestSizeDeleted; // Largest size of deleted record.
+    S32 lastDeletedIndex;   // Offset to last deleted index record.
     U32 nextFreeIndex;      // Offset to free index position.
     U16 reservedIndexRecords;
     U16 nrOfKeys;           // Number of defined search index keys.
@@ -145,11 +139,9 @@ struct sHEADER
         version( NDXFIO_VERSION ),
         recordReference( 0 ), // Reference incremented every record creation.
         nextFreeData( 0 ),
-
         nrOfRecords( 0 ),
         nrOfIndexRecords( 0 ),
-        firstDeletedIndex( 0 ),
-        largestSizeDeleted( 0 ),
+        lastDeletedIndex( INVALID_VALUE ),
         nextFreeIndex( 0 ),
         reservedIndexRecords( OSNDXFIO::DEFAULT_RESERVED_INDEX_RECORDS ),
         nrOfKeys( 0 ),
@@ -189,22 +181,21 @@ struct sKEY_INDEX
 /** Database handle list */
 struct OSNDXFIO::sHANDLE : sHEADER  // Inherit sHEADER
 {
-    OSNDXFIO::sHANDLE*  pPrevious;
-    OSNDXFIO::sHANDLE*  pNext;
-    OSFIO               fileHandle;
-    char*               pDatabaseName;
-    bool                readOnly;
+    OSNDXFIO::sHANDLE* pPrevious;
+    OSNDXFIO::sHANDLE* pNext;
+    OSFIO fileHandle;
+    char* pDatabaseName;
+    bool readOnly;
     // Key index part.
-    bool                reindexRequested;
-    sKEY_INDEX*         apKeyIndex;
-    BYTE*               apKey;      // sINDEX + totalKeySize == totalIndexSize.
-    sKEY_DESC*          apKeyDescriptor;
-    U32                 firstDeletedKeyIndex;
-    U32                 allocatedIndexKeys; // Required for allocating memory for
-                                            // apKey and apKeyIndex[ keys ].apRecord.
-    U16                 totalIndexSize;
+    bool reindexRequested;
+    sKEY_INDEX* apKeyIndex;
+    BYTE* apKey; // sINDEX + totalKeySize == totalIndexSize.
+    sKEY_DESC* apKeyDescriptor;
+    U32 allocatedIndexKeys; // Required for allocating memory for
+                            // apKey and apKeyIndex[ keys ].apRecord.
+    U16 totalIndexSize;
 
-    sHANDLE()           // Constructor.
+    sHANDLE() // Constructor.
     :
         pPrevious( NULL ),
         pNext( NULL ),
@@ -212,11 +203,9 @@ struct OSNDXFIO::sHANDLE : sHEADER  // Inherit sHEADER
         pDatabaseName( NULL ),
         readOnly( false ),
         reindexRequested( false ),
-
         apKeyIndex( NULL ),
         apKey( NULL ),
         apKeyDescriptor( NULL ),
-        firstDeletedKeyIndex( U32(INVALID_VALUE) ),
         allocatedIndexKeys( 0 ),
         totalIndexSize( 0 )
     {
@@ -226,24 +215,29 @@ struct OSNDXFIO::sHANDLE : sHEADER  // Inherit sHEADER
 // ---- local functions prototypes ----
 static bool isDatabaseNameValid( const STRING in_databaseName );
 static bool isKeyDescriptorValid(
-                       U16                       in_nrOfKeys,
-                       const OSNDXFIO::sKEY_DESC in_keyDesc[],
-                       U16&                      out_keyDescSize,
-                       U16&                      out_totalKeySize );
-static bool initKeyIndexArray( OSNDXFIO::sHANDLE* pHandle,
-                               U16                key );
+    U16 in_nrOfKeys,
+    const OSNDXFIO::sKEY_DESC in_keyDesc[],
+    U16& out_keyDescSize,
+    U16& out_totalKeySize );
+static bool initKeyIndexArray(
+    OSNDXFIO::sHANDLE* pHandle,
+    U16 key );
 static bool initKeyArray( OSNDXFIO::sHANDLE* pHandle );
-static bool createReservedIndexRecords( OSFIO& handle,
-                                        U32    filePointer,
-                                        U16    reservedIndexRecords,
-                                        U16    totalKeySize );
-static void shellSort( OSNDXFIO::sHANDLE* const pHandle,
-                       U16 const in_keyId );
-static bool generateSearchKey( const OSNDXFIO::sHANDLE* pHandle,
-                               const OSNDXFIO::sRECORD& in_rRecord,
-                               BYTE*                    out_pSearchKey );
-static bool convertKeySegment( BYTE*            pKeySegment,
-                               OSNDXFIO:: eTYPE in_keySegmentType);
+static bool createReservedIndexRecords(
+    OSFIO& handle,
+    U32 filePointer,
+    U16 reservedIndexRecords,
+    U16 totalKeySize );
+static void shellSort(
+    OSNDXFIO::sHANDLE* const pHandle,
+    U16 const in_keyId );
+static bool generateSearchKey(
+    const OSNDXFIO::sHANDLE* pHandle,
+    const OSNDXFIO::sRECORD& in_rRecord,
+    BYTE* out_pSearchKey );
+static bool convertKeySegment(
+    BYTE* pKeySegment,
+    OSNDXFIO:: eTYPE in_keySegmentType );
 static void swap( U16* pU16 );
 static void swap( U32* pU32 );
 
@@ -316,8 +310,8 @@ bool OSNDXFIO::open( const STRING in_databaseName,
         if ( allocatedIndexKeys < MAX_MALLOC )
         {
             m_handle->readOnly = in_readOnly;
-            m_handle->allocatedIndexKeys  = in_readOnly ? m_handle->nrOfIndexRecords :
-                (U32)allocatedIndexKeys;
+            m_handle->allocatedIndexKeys  = in_readOnly ?
+                m_handle->nrOfIndexRecords : (U32)allocatedIndexKeys;
             m_handle->pDatabaseName = (char*)::malloc( ::strlen( in_databaseName ) + 1 );
         }
 
@@ -338,7 +332,7 @@ bool OSNDXFIO::open( const STRING in_databaseName,
     if ( statusOk )
     {
         U16 totalSegmentSize = 0;
-        U16 keyOffset        = sizeof( sINDEX );
+        U16 keyOffset = sizeof( sINDEX );
 
         // Initialize memory.
         ::memset( m_handle->apKeyIndex, 0, ( m_handle->nrOfKeys * sizeof( sKEY_INDEX )));
@@ -379,7 +373,7 @@ bool OSNDXFIO::open( const STRING in_databaseName,
                 }
 
                 m_handle->apKeyIndex[ i ].keyOffset = keyOffset;
-                m_handle->apKeyIndex[ i ].keySize   = keySize;
+                m_handle->apKeyIndex[ i ].keySize = keySize;
 
                 keyOffset += keySize;
 
@@ -450,12 +444,12 @@ bool OSNDXFIO::open( const STRING in_databaseName,
                 pHandle = pHandle->pNext;
             }
             // Update database handle administration.
-            pHandle->pNext      = m_handle;
+            pHandle->pNext = m_handle;
             m_handle->pPrevious = pHandle;
         }
 
         m_handle->pNext = NULL;
-        m_error         = NO_ERROR;
+        m_error = NO_ERROR;
 
         for ( U16 keyId = 0; keyId < m_handle->nrOfKeys; keyId++  )
         {
@@ -495,12 +489,10 @@ bool OSNDXFIO::create( const STRING     in_databaseName,
     }
 
     U16 keyDescriptorSize = 0;
-    U16 totalKeySize      = 0;
+    U16 totalKeySize = 0;
 
-    if ( !isKeyDescriptorValid( in_nrOfKeys,
-                              in_keyDescriptor,
-                              keyDescriptorSize,
-                              totalKeySize ))
+    if ( !isKeyDescriptorValid(
+        in_nrOfKeys,  in_keyDescriptor, keyDescriptorSize,  totalKeySize ))
     {
         m_error = INVALID_KEY_DESCRIPTOR;
         UNSUCCESSFUL_RETURN; // Exit create().
@@ -532,17 +524,17 @@ bool OSNDXFIO::create( const STRING     in_databaseName,
 
         statusOk = statusOk && fileHandle.open( in_databaseName );
 
-        record.id    = eHEADER;
+        record.id = eHEADER;
         record.size  = sizeof( header ) + keyDescriptorSize;
 
         // Data header initialization.
         header.reservedIndexRecords = in_reservedIndexRecords;
         header.nrOfIndexRecords = header.reservedIndexRecords;
         header.nextFreeIndex = sizeof( record /* header id */ ) + record.size +
-                               sizeof( record /* index id */ );
+            sizeof( record /* index id */ );
         header.nextFreeData = header.nextFreeIndex + ( header.reservedIndexRecords *
-                              ( sizeof( sINDEX ) + totalKeySize )) +
-                              sizeof( record ); /* next index id */
+            ( sizeof( sINDEX ) + totalKeySize )) +
+            sizeof( record ); /* next index id */
         header.nrOfKeys = in_nrOfKeys;
         header.totalKeySize = totalKeySize;
         header.keyDescriptorSize = keyDescriptorSize;
@@ -624,11 +616,56 @@ bool OSNDXFIO::close()
 /*============================================================================*/
 bool OSNDXFIO::rebuild( const STRING    in_databaseName,
                         U16             in_nrOfKeys,
-                        const sKEY_DESC in_keyDescriptor[] )
+                        const sKEY_DESC in_keyDescriptor[],
+                        U32             in_maxDataSize )
 /*============================================================================*/
 {
-    // Not implemented yet!
-    return false;
+    U32 nbOfRecords = getNrOfRecords();
+
+    if ( 0 == nbOfRecords )
+    {
+        m_error = EMPTY_DATABASE;
+        UNSUCCESSFUL_RETURN; // Exit rebuild().
+    }
+
+    BYTE* pData = (BYTE*)::malloc( in_maxDataSize );
+
+    if ( NULL == pData )
+    {
+        m_error = MEMORY_ALLOCATION_ERROR;
+        UNSUCCESSFUL_RETURN; // Exit rebuild().
+    }
+
+    OSNDXFIO rebuild_db;
+    bool statusOk = rebuild_db.create( in_databaseName, in_nrOfKeys, in_keyDescriptor,  nbOfRecords );
+
+    sRECORD record;
+    record.pData = pData;
+
+    U32 index;
+    for ( index = 0; statusOk && ( index < m_handle->nrOfIndexRecords ); index++ )
+    {
+        sINDEX* pIndex = (sINDEX*)( m_handle->apKey + ( m_handle->totalIndexSize * index ));
+        if ( pIndex->status == eOK )
+        {
+            U32 temp;
+
+            if ( in_maxDataSize < pIndex->dataSize )
+            {
+                in_maxDataSize       = pIndex->dataSize;
+                record.allocatedSize = in_maxDataSize;
+                record.pData         = (BYTE*)::realloc( pData, in_maxDataSize );
+            }
+
+            statusOk = getRecord( index, record );
+            statusOk = statusOk && rebuild_db.createRecord( record, temp );
+        }
+    }
+
+    ::free( pData );
+    (void)rebuild_db.close();
+
+    return statusOk;
 }
 
 /*============================================================================*/
@@ -677,9 +714,9 @@ bool OSNDXFIO::createRecord( sRECORD& in_rRecord,
         UNSUCCESSFUL_RETURN; // Exit createRecord().
     }
 
-    bool deletedRecordAvailable = ( m_handle->largestSizeDeleted >= in_rRecord.dataSize );
-    U32  indexOffset = deletedRecordAvailable ?  m_handle->firstDeletedIndex :
-    m_handle->nextFreeIndex;
+    bool deletedRecordAvailable = ( m_handle->lastDeletedIndex >= 0 );
+    U32  indexOffset = deletedRecordAvailable ? m_handle->lastDeletedIndex :
+                       m_handle->nextFreeIndex;
 
     sDATA   data;
     sINDEX  index;
@@ -695,7 +732,7 @@ bool OSNDXFIO::createRecord( sRECORD& in_rRecord,
 
         if ( deletedRecordAvailable )
         {
-            statusOk = statusOk && ( index.status == eDELETED );
+            statusOk = statusOk && ( index.status >= eDELETED );
             // Read data record.
             statusOk = statusOk && m_handle->fileHandle.read( index.dataOffset,
                                                               &data,
@@ -707,16 +744,15 @@ bool OSNDXFIO::createRecord( sRECORD& in_rRecord,
             if ( statusOk )
             {
                 if ( in_rRecord.dataSize <= data.size )
-                {                                    // This record is not available
-                    deletedRecordAvailable    = false; // anymore for overwriting.
-                    header.firstDeletedIndex  = index.prevDeletedIndex;
-                    header.largestSizeDeleted = index.largestSizeDeleted;
+                {   // This record is not available anymore for overwriting.
+                    deletedRecordAvailable  = false;
+                    header.lastDeletedIndex = (U32)index.prevDeletedIndex;
                 }
                 else
                 {
                     indexOffset = index.prevDeletedIndex;
 
-                    if ( indexOffset == 0 ) // There are no more deleted records found.
+                    if ( indexOffset < 0 ) // There are no more deleted records found.
                     {
                         deletedRecordAvailable = false;
                         // Reread index record and check index record id.
@@ -739,7 +775,7 @@ bool OSNDXFIO::createRecord( sRECORD& in_rRecord,
     if (( statusOk ) && ( index.status == eRESERVED ))
     {
         // Initialize index and data record.
-        index.status     = eINDEX;
+        index.status     = eOK;
         index.dataOffset = m_handle->nextFreeData;
         index.dataSize   = in_rRecord.dataSize;
         index.recordRef  = m_handle->recordReference;
@@ -756,15 +792,12 @@ bool OSNDXFIO::createRecord( sRECORD& in_rRecord,
         // Write data id record.
         statusOk = m_handle->fileHandle.write( index.dataOffset, &data, sizeof( data ));
         // Write data.
-        statusOk = statusOk && m_handle->fileHandle.write(( in_rRecord.pData +
-        in_rRecord.dataOffset ), in_rRecord.dataSize );
+        statusOk = statusOk && m_handle->fileHandle.write(( in_rRecord.pData + in_rRecord.dataOffset ), in_rRecord.dataSize );
         // Write index record.
         statusOk = statusOk && m_handle->fileHandle.write( index.offset, &index, sizeof( index ));
         // Write index key.
         statusOk = statusOk && m_handle->fileHandle.write( pSearchKey, header.totalKeySize );
     }
-
-    U32 prevNrOfRecords = header.nrOfRecords;
 
     if ( statusOk )
     {
@@ -822,57 +855,34 @@ bool OSNDXFIO::createRecord( sRECORD& in_rRecord,
 
         if ( statusOk && reservedIndexRecordsCreated )
         {
-          m_error = MEMORY_ALLOCATION_ERROR;
-          // Reinitialize apRecord and apKey array.
-          for ( U16 key = 0; statusOk && ( key < m_handle->nrOfKeys ); key++ )
-          {
-            statusOk = initKeyIndexArray( m_handle, key );
-          }
+            m_error = MEMORY_ALLOCATION_ERROR;
+            // Reinitialize apRecord and apKey array.
+            for ( U16 key = 0; statusOk && ( key < m_handle->nrOfKeys ); key++ )
+            {
+                statusOk = initKeyIndexArray( m_handle, key );
+            }
 
-          statusOk = statusOk && initKeyArray( m_handle );
+            statusOk = statusOk && initKeyArray( m_handle );
         }
     }
 
     if ( statusOk )
     {
-        U32 indexOffset;
-        // Check for deleted key indices.
-        if ( m_handle->firstDeletedKeyIndex == U32(INVALID_VALUE))
+        U32 prevNrOfRecords = header.nrOfRecords;
+        U32 indexOffset     = prevNrOfRecords * m_handle->totalIndexSize;
+
+        // Update apRecord index array and apKey array in memory.
+        ::memcpy(( m_handle->apKey + indexOffset), &index, sizeof( index ));
+        ::memcpy(( m_handle->apKey + indexOffset + sizeof( index )),
+            pSearchKey, m_handle->totalKeySize);
+
+        for ( U16 k = 0; k < m_handle->nrOfKeys; k++ )
         {
-            out_rIndex  = prevNrOfRecords;
-            indexOffset = prevNrOfRecords * m_handle->totalIndexSize;
-        }
-        else
-        {
-            out_rIndex  = m_handle->firstDeletedKeyIndex;
-            indexOffset = m_handle->firstDeletedKeyIndex * m_handle->totalIndexSize;
-
-            sINDEX* pIndex = (sINDEX*)( m_handle->apKey + indexOffset );
-
-            m_error = INVALID_KEY_INDEX;
-            // Check index status.
-            statusOk = ( pIndex->status == eDELETED );
-
-            if ( statusOk )
-            {
-                m_handle->firstDeletedKeyIndex = pIndex->prevDeletedIndex;
-            }
+            m_handle->apKeyIndex[ k ].bSorted = false;
         }
 
-        if ( statusOk )
-        {
-            // Update apRecord index array and apKey array in memory.
-            ::memcpy(( m_handle->apKey + indexOffset), &index, sizeof( index ));
-            ::memcpy(( m_handle->apKey + indexOffset + sizeof( index )),
-                pSearchKey, m_handle->totalKeySize);
-
-            for ( U16 k = 0; k < m_handle->nrOfKeys; k++  )
-            {
-                m_handle->apKeyIndex[ k ].bSorted = false;
-            }
-
-            m_error = NO_ERROR;
-        }
+        m_error     = NO_ERROR;
+        out_rIndex  = prevNrOfRecords;
     }
 
     ::free( pSearchKey );
@@ -961,8 +971,21 @@ bool OSNDXFIO::getNextRecord( U16      in_keyId,
 bool OSNDXFIO::deleteRecord( U32 in_index )
 /*============================================================================*/
 {
-    // Not implemented yet!
-    return false;
+    m_error        = ENTRY_NOT_FOUND;
+    sINDEX* pIndex = (sINDEX*)( m_handle->apKey + ( m_handle->totalIndexSize * in_index ));
+    bool  statusOk = ( in_index < m_handle->nrOfIndexRecords );
+
+    statusOk = statusOk && ( eOK == pIndex->status );
+
+    if ( statusOk )
+    {
+        pIndex->prevDeletedIndex   = m_handle->lastDeletedIndex;
+        m_handle->lastDeletedIndex = in_index;
+    }
+
+    // TO DO write index + data record!
+
+    return statusOk;
 }
 
 /*============================================================================*/
@@ -970,41 +993,33 @@ bool OSNDXFIO::updateRecord( U32      in_index,
                              sRECORD& in_rRecord )
 /*============================================================================*/
 {
-    m_error        = INVALID_PARAMETERS;
-    sINDEX* pIndex = (sINDEX*)( m_handle->apKey +
-        ( m_handle->totalIndexSize * in_index ));
-    bool  statusOk = ( in_index < m_handle->nrOfRecords );
+    m_error        = NO_ERROR;
+    sINDEX* pIndex = (sINDEX*)( m_handle->apKey + ( m_handle->totalIndexSize * in_index ));
+    bool  statusOk = ( in_index < m_handle->nrOfIndexRecords );
 
     sDATA data;
     if ( statusOk )
     {
         m_error = DATABASE_IO_ERROR;
         // Read data id record.
-        statusOk = ( m_handle->fileHandle.read( pIndex->dataOffset, &data,
-            sizeof( data )));
+        statusOk = ( m_handle->fileHandle.read( pIndex->dataOffset, &data, sizeof( data )));
     }
 
     if ( statusOk )
     {
         m_error = INDEX_CORRUPT;
-        // Verify data type.
-        statusOk = (( data.id >= S32( eDATA )) &&
-        // Verify record reference.
-        ( data.recordRef == pIndex->recordRef ));
+        // Verify data type and record reference.
+        statusOk = (( data.id >= S32( eDATA )) && ( data.recordRef == pIndex->recordRef ));
     }
 
     if ( statusOk )
     {
         m_error = RECORD_TOO_LARGE;
         // Verify available data size.
-        statusOk = ( data.offset - ( pIndex->dataOffset + sizeof( data )) >=
-            in_rRecord.dataSize );
+        statusOk = ( data.offset - ( pIndex->dataOffset + sizeof( data )) >= in_rRecord.dataSize );
     }
 
-    if ( statusOk )
-    {
-        m_error = NO_ERROR;
-    }
+    // TO DO write record!
 
     return statusOk;
 }

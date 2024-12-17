@@ -15,6 +15,8 @@
  *
  *  License: GPL, v3, as defined and found on www.gnu.org,
  *           https://www.gnu.org/licenses/gpl-3.0.html
+ *
+ *  Description: OSNDXFIO test bench
  */
 
 // ---- system includes ----
@@ -51,7 +53,7 @@ struct sTEST_OBJECT
     char name[ SIZE_OF_NAME ];
     char department[ SIZE_OF_DEPARTMENT ];
     BYTE data[ DATA_SIZE ];
-    
+
     sTEST_OBJECT() // Constructor.
     :
         id( 0 )
@@ -63,8 +65,8 @@ struct sTEST_OBJECT
 };
 
 static sTEST_OBJECT testObjects[ maxRecords ];
-#define OFFSET_DEPARTMENT ( SIZE_OF_NAME + sizeof( U32 ))     
-#define OFFSET_NAME       sizeof( U32 )     
+#define OFFSET_DEPARTMENT ( SIZE_OF_NAME + sizeof( U32 ))
+#define OFFSET_NAME       sizeof( U32 )
 static OSNDXFIO::sKEY_SEGMENT key1[ 2 ] =
     { OSNDXFIO::sKEY_SEGMENT( OSNDXFIO::tBYTE, OFFSET_DEPARTMENT, SIZE_OF_DEPARTMENT ),
         OSNDXFIO::sKEY_SEGMENT( OSNDXFIO::tBYTE, OFFSET_NAME, SIZE_OF_NAME ) };

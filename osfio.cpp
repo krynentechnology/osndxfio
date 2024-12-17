@@ -1,6 +1,6 @@
 /**
  *  Copyright (C) 2024, Kees Krijnen.
- *   
+ *
  *  This program is free software: you can redistribute it and/or modify it
  *  under the terms of the GNU Lesser General Public License as published by the
  *  Free Software Foundation, either version 3 of the License, or (at your
@@ -16,6 +16,8 @@
  *
  *  License: LGPL, v3, as defined and found on www.gnu.org,
  *           https://www.gnu.org/licenses/lgpl-3.0.html
+ *
+ *  Description: File I/O
  */
 
 // ---- include files ----
@@ -59,14 +61,14 @@ bool OSFIO::open( const STRING in_fileName,
     }
 
     int handle = ::open( in_fileName, (( in_readOnly ? O_RDONLY : O_RDWR ) | O_BINARY ));
-    
+
     bool result = ( handle != ERROR );
-    
+
     if ( result )
     {
         m_handle = (HANDLE)handle;
     }
-    
+
     return result;
 }
 
@@ -78,7 +80,7 @@ bool OSFIO::create( const STRING in_fileName )
     {
         return false;
     }
-    
+
     if ( open( in_fileName, READ_ONLY_ACCESS ))
     {
         close();
@@ -88,7 +90,7 @@ bool OSFIO::create( const STRING in_fileName )
     {
         m_handle = (HANDLE)::open( in_fileName, ( O_CREAT | O_BINARY ), ( S_IWRITE | S_IREAD ));
     }
-    
+
     return ( int( m_handle ) != ERROR );
 }
 
@@ -102,9 +104,9 @@ bool OSFIO::close()
     }
 
     bool status_ok = ( ::close( int( m_handle )) != ERROR );
-    
+
     m_handle = NULL;
-    
+
     return status_ok;
 }
 
@@ -127,7 +129,7 @@ bool OSFIO::write( const POINTER in_dataPtr,
     {
         return false;
     }
-    
+
     return ( ::write( int( m_handle ), in_dataPtr, in_dataSize ) != ERROR );
 }
 
@@ -141,12 +143,11 @@ bool OSFIO::write( U32           in_position,
     {
         return false;
     }
-    
+
     return (( ::lseek( int( m_handle ),
-            (( in_position == EOF_POSITION ) ? 0 : in_position ),
-            (( in_position == EOF_POSITION ) ? SEEK_END : SEEK_SET )) != ERROR )
-            &&
-           ( ::write( int( m_handle ), in_dataPtr, in_dataSize ) != ERROR ));
+        (( in_position == EOF_POSITION ) ? 0 : in_position ),
+        (( in_position == EOF_POSITION ) ? SEEK_END : SEEK_SET )) != ERROR ) &&
+        ( ::write( int( m_handle ), in_dataPtr, in_dataSize ) != ERROR ));
 }
 
 /*============================================================================*/
@@ -158,9 +159,9 @@ bool OSFIO::read( POINTER out_dataPtr,
     {
         return false;
     }
-    
+
     return ( (U32)::read( int( m_handle ), out_dataPtr, in_dataSize ) ==
-           in_dataSize );
+        in_dataSize );
 }
 
 /*============================================================================*/
@@ -173,10 +174,10 @@ bool OSFIO::read( U32     in_position,
     {
         return false;
     }
-    
-    return ( ( ::lseek( int( m_handle ), in_position, SEEK_SET ) != ERROR ) &&
-           ( (U32)::read( int( m_handle ), out_dataPtr, in_dataSize ) ==
-           in_dataSize ) );
+
+    return (( ::lseek( int( m_handle ), in_position, SEEK_SET ) != ERROR ) &&
+        ( (U32)::read( int( m_handle ), out_dataPtr, in_dataSize ) ==
+        in_dataSize ));
 }
 
 /*============================================================================*/
@@ -187,7 +188,7 @@ bool OSFIO::eof()
     {
         return false;
     }
-    
+
     return ( ::eof( int( m_handle ) ) == 1 );
 }
 
@@ -213,19 +214,18 @@ bool OSFIO::truncate( U32 in_position )
     {
         return false;
     }
-    
+
     U32  fileSize  = size();
     bool status_ok = ( fileSize != (U32)INVALID_VALUE );
-    
+
     if ( status_ok )
     {
         status_ok = ( in_position < fileSize );
-        
         status_ok = status_ok && ( ::chsize( int( m_handle ), in_position ) != ERROR );
         // set file pointer correct
         status_ok = status_ok && ( ::lseek( int( m_handle ), 0, SEEK_END ) != ERROR );
     }
-    
+
     return status_ok;
 }
 
@@ -234,12 +234,12 @@ U32 OSFIO::timestamp()
 /*============================================================================*/
 {
     struct stat statBuffer;
-    
+
     if ( ::fstat( int( m_handle ), &statBuffer ) == 0 )
     {
         return (U32)statBuffer.st_mtime;
-    } 
-    
+    }
+
     return (U32)INVALID_VALUE;
 }
 

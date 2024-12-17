@@ -2,7 +2,7 @@
 #define OSFIO_HPP
 /**
  *  Copyright (C) 2024, Kees Krijnen.
- *   
+ *
  *  This program is free software: you can redistribute it and/or modify it
  *  under the terms of the GNU Lesser General Public License as published by the
  *  Free Software Foundation, either version 3 of the License, or (at your
@@ -18,6 +18,8 @@
  *
  *  License: LGPL, v3, as defined and found on www.gnu.org,
  *           https://www.gnu.org/licenses/lgpl-3.0.html
+ *
+ *  Description: File I/O
  */
 
 // ---- include files ----
@@ -133,7 +135,7 @@ bool eof();
 *  Gives the size of file.
 *
 *  @pre      Valid handle by open() or create().
-*  @return   (U32)INVALID_VALUE on failure.        
+*  @return   (U32)INVALID_VALUE on failure.
 */
 U32 size();
 
@@ -141,7 +143,7 @@ U32 size();
 *  Gives the file pointer position. Byte offset from start of file.
 *
 *  @pre      Valid handle by open() or create().
-*  @return   (U32)INVALID_VALUE on failure.        
+*  @return   (U32)INVALID_VALUE on failure.
 */
 U32 position();
 
@@ -157,10 +159,10 @@ bool truncate( U32 in_filePointer );
 /**
 *  Returns time of last modification in seconds since midnight (00:00:00),
 *  1 January 1970.
-*  
+*
 *  @pre      Valid handle by open() or create().
-*  @return   (U32)INVALID_VALUE on failure.        
-*/  
+*  @return   (U32)INVALID_VALUE on failure.
+*/
 U32 timestamp();
 
 private:

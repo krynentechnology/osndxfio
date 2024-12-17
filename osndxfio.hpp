@@ -54,6 +54,7 @@ enum eERROR
     DATABASE_ALREADY_EXIST,
     DATABASE_ALREADY_OPENED,
     DATABASE_IO_ERROR,
+    EMPTY_DATABASE,
     ENTRY_NOT_FOUND,
     INDEX_CORRUPT,
     INVALID_DATABASE,
@@ -88,7 +89,8 @@ enum
     MINIMUM_RESERVED_INDEX_RECORDS = 10,    // Minimum and maximum values are checked,
     DEFAULT_RESERVED_INDEX_RECORDS = 100,   // optimum depends on application
     MAXIMUM_RESERVED_INDEX_RECORDS = 10000, // U16 in_reservedIndexRecords
-    DEFAULT_ALLOCATED_INDEX_KEYS = 50000    // U32 in_allocatedIndexKeys
+    DEFAULT_ALLOCATED_INDEX_KEYS = 50000,   // U32 in_allocatedIndexKeys
+    MAXIMUM_DATA_SIZE = 1000                // U32 in_maxDataSize
 };
 
 /**
@@ -269,21 +271,23 @@ bool create( const STRING    in_databaseName,
 bool close();
 
 /**
-*  Rebuilds an existing indexed database with another key descriptor. The
-*  existing indexed database will be renamed to _database.
+*  Rebuilds an existing indexed database with another key descriptor.
 *
 *  Warning: Take care if the existing key index is based on data before the
 *  data offset.
 *
-*  @param  in_databaseName   File name of the database.
+*  @pre    Opened indexed database.
+*  @param  in_databaseName   File name of the rebuild database.
 *  @param  in_nrOfKeys       Number of index keys.
 *  @param  in_keyDescriptor  Description (array) of every index key.
+*  @param  in_maxDataSize    Mazimum expected data size (for memory allocation).
 *  @return True if successful. On false error could be retrieved with
 *          getLastError().
 */
-bool rebuild( const STRING    in_databaseName,
-              U16             in_nrOfKeys,
-              const sKEY_DESC in_keyDescriptor[] );
+bool rebuild( const STRING          in_databaseName,
+                    U16             in_nrOfKeys,
+                    const sKEY_DESC in_keyDescriptor[],
+                    U32             in_maxDataSize = MAXIMUM_DATA_SIZE );
 
 /** Returns number of keys of open database. */
 U16 getNrOfKeys();

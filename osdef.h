@@ -18,6 +18,8 @@
  *
  *  License: LGPL, v3, as defined and found on www.gnu.org,
  *           https://www.gnu.org/licenses/lgpl-3.0.html
+ *
+ *  Description: Type, symbol and mocro definitions
  */
 
 // ---- include files ----
