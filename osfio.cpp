@@ -37,14 +37,14 @@
 // ---- constructor ----
 OSFIO::OSFIO()
 :
-    m_handle( NULL )
+    m_handle( ERROR )
 {
 }
 
 // ---- destructor ----
 OSFIO::~OSFIO()
 {
-    if ( m_handle != NULL )
+    if ( m_handle != ERROR )
     {
         close();
     }
@@ -55,28 +55,21 @@ bool OSFIO::open( const STRING in_fileName,
                   bool         in_readOnly )
 /*============================================================================*/
 {
-    if ( m_handle != NULL )
+    if ( m_handle != ERROR )
     {
         return false;
     }
 
-    int handle = ::open( in_fileName, (( in_readOnly ? O_RDONLY : O_RDWR ) | O_BINARY ));
+    m_handle = ::open( in_fileName, (( in_readOnly ? O_RDONLY : O_RDWR ) | O_BINARY ));
 
-    bool result = ( handle != ERROR );
-
-    if ( result )
-    {
-        m_handle = (HANDLE)handle;
-    }
-
-    return result;
+    return ( m_handle != ERROR );
 }
 
 /*============================================================================*/
 bool OSFIO::create( const STRING in_fileName )
 /*============================================================================*/
 {
-    if ( m_handle != NULL )
+    if ( m_handle != ERROR )
     {
         return false;
     }
@@ -86,26 +79,24 @@ bool OSFIO::create( const STRING in_fileName )
         close();
         return false;
     }
-    else
-    {
-        m_handle = (HANDLE)::open( in_fileName, ( O_CREAT | O_BINARY ), ( S_IWRITE | S_IREAD ));
-    }
 
-    return ( int( m_handle ) != ERROR );
+    m_handle = ::open( in_fileName, ( O_CREAT | O_BINARY ), ( S_IWRITE | S_IREAD ));
+
+    return ( m_handle != ERROR );
 }
 
 /*============================================================================*/
 bool OSFIO::close()
 /*============================================================================*/
 {
-    if ( m_handle == NULL )
+    if ( m_handle == ERROR )
     {
         return false;
     }
 
     bool status_ok = ( ::close( int( m_handle )) != ERROR );
 
-    m_handle = NULL;
+    m_handle = ERROR;
 
     return status_ok;
 }
@@ -125,7 +116,7 @@ bool OSFIO::write( const POINTER in_dataPtr,
                    U32           in_dataSize )
 /*============================================================================*/
 {
-    if ( m_handle == NULL )
+    if ( m_handle == ERROR )
     {
         return false;
     }
@@ -139,7 +130,7 @@ bool OSFIO::write( U32           in_position,
                    U32           in_dataSize )
 /*============================================================================*/
 {
-    if ( m_handle == NULL )
+    if ( m_handle == ERROR )
     {
         return false;
     }
@@ -155,7 +146,7 @@ bool OSFIO::read( POINTER out_dataPtr,
                   U32     in_dataSize )
 /*============================================================================*/
 {
-    if ( m_handle == NULL )
+    if ( m_handle == ERROR )
     {
         return false;
     }
@@ -170,7 +161,7 @@ bool OSFIO::read( U32     in_position,
                   U32     in_dataSize )
 /*============================================================================*/
 {
-    if ( m_handle == NULL )
+    if ( m_handle == ERROR )
     {
         return false;
     }
@@ -184,7 +175,7 @@ bool OSFIO::read( U32     in_position,
 bool OSFIO::eof()
 /*============================================================================*/
 {
-    if ( m_handle == NULL )
+    if ( m_handle == ERROR )
     {
         return false;
     }
@@ -210,7 +201,7 @@ U32 OSFIO::position()
 bool OSFIO::truncate( U32 in_position )
 /*============================================================================*/
 {
-    if ( m_handle == NULL )
+    if ( m_handle == ERROR )
     {
         return false;
     }

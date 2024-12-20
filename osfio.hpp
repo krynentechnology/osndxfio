@@ -166,7 +166,7 @@ bool truncate( U32 in_filePointer );
 U32 timestamp();
 
 private:
-HANDLE m_handle;
+int m_handle;
 };
 #endif  // OSFIO_HPP
 
