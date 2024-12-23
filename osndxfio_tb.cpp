@@ -22,8 +22,7 @@
 // ---- system includes ----
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
-#include <mem.h>
+#include <string.h>
 #include <time.h>
 #include <sys\timeb.h>
 
@@ -68,13 +67,13 @@ static sTEST_OBJECT testObjects[ maxRecords ];
 #define OFFSET_DEPARTMENT ( SIZE_OF_NAME + sizeof( U32 ))
 #define OFFSET_NAME       sizeof( U32 )
 static OSNDXFIO::sKEY_SEGMENT key1[ 2 ] =
-    { OSNDXFIO::sKEY_SEGMENT( OSNDXFIO::tBYTE, OFFSET_DEPARTMENT, SIZE_OF_DEPARTMENT ),
-        OSNDXFIO::sKEY_SEGMENT( OSNDXFIO::tBYTE, OFFSET_NAME, SIZE_OF_NAME ) };
+    { OSNDXFIO::sKEY_SEGMENT( OFFSET_DEPARTMENT, OSNDXFIO::tBYTE, SIZE_OF_DEPARTMENT ),
+        OSNDXFIO::sKEY_SEGMENT( OFFSET_NAME, OSNDXFIO::tBYTE, SIZE_OF_NAME ) };
 static OSNDXFIO::sKEY_SEGMENT key2[ 1 ] =
-    { OSNDXFIO::sKEY_SEGMENT( OSNDXFIO::tU32, 0, sizeof( U32 )) };
+    { OSNDXFIO::sKEY_SEGMENT( 0, OSNDXFIO::tU32, sizeof( U32 )) };
 static OSNDXFIO::sKEY_SEGMENT key3[ 2 ] =
-    { OSNDXFIO::sKEY_SEGMENT( OSNDXFIO::tBYTE, OFFSET_NAME, SIZE_OF_NAME ),
-        OSNDXFIO::sKEY_SEGMENT( OSNDXFIO::tU32, 0, sizeof( U32 )) };
+    { OSNDXFIO::sKEY_SEGMENT( OFFSET_NAME, OSNDXFIO::tBYTE, SIZE_OF_NAME ),
+        OSNDXFIO::sKEY_SEGMENT( 0, OSNDXFIO::tU32, sizeof( U32 )) };
 
 static STRING database1 = "testDb1.dat";
 
@@ -148,8 +147,8 @@ bool test1( void )
     printDescription( 1, "Create and close empty database" );
 
     OSNDXFIO::sKEY_SEGMENT key[ 2 ] =
-        { OSNDXFIO::sKEY_SEGMENT( OSNDXFIO::tBYTE, 0, SIZE_OF_NAME  ),
-        OSNDXFIO::sKEY_SEGMENT( OSNDXFIO::tBYTE, ( SIZE_OF_NAME - 1 ),
+        { OSNDXFIO::sKEY_SEGMENT( 0, OSNDXFIO::tBYTE, SIZE_OF_NAME ),
+        OSNDXFIO::sKEY_SEGMENT(( SIZE_OF_NAME - 1 ), OSNDXFIO::tBYTE,
         SIZE_OF_DEPARTMENT ) }; // Overlap of data segments.
 
     OSNDXFIO::sKEY_DESC keyDesc[ 3 ];

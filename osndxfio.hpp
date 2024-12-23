@@ -115,24 +115,24 @@ enum
 */
 struct sKEY_SEGMENT
 {
-    eTYPE type;     // The type of the key segment, required for key matching.
-    U16   offset;   // The offset of key segment.
-    U16   size;     // The size of key segment.
+    U16  offset; // The offset of key segment.
+    BYTE type;   // The type of the key segment, required for key matching.
+    BYTE size;   // The size of key segment.
 
-    sKEY_SEGMENT()  // Constructor.
+    sKEY_SEGMENT() // Constructor.
     :
-        type( tBYTE ),
         offset( U16( INVALID_VALUE )),
+        type( BYTE( tBYTE )),
         size( 0 )
     {
     }
 
-    sKEY_SEGMENT( eTYPE in_type, // Constructor.
-                  U16 in_offset,
+    sKEY_SEGMENT( U16 in_offset, // Constructor.
+                  eTYPE in_type,
                   U16 in_size )
     :
-        type( in_type ),
         offset( in_offset ),
+        type( BYTE( in_type )),
         size( in_size )
     {
     }
@@ -464,8 +464,8 @@ sHANDLE* m_handle;
 eERROR   m_error;
 
 // Copy construction and assignment are prevented.
-OSNDXFIO( const OSNDXFIO& const invalid );
-OSNDXFIO& operator=( OSNDXFIO& const invalid );
+OSNDXFIO( const OSNDXFIO& );
+OSNDXFIO& operator=( OSNDXFIO& );
 };
 #endif // OSNDXFIO_HPP
 

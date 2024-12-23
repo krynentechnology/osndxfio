@@ -41,12 +41,8 @@
  */
 
 // ---- system include files ----
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
 #include <stdlib.h>
-#include <malloc.h>
-#include <io.h>
+#include <string.h>
 
 // ---- include files ----
 #include <osfio.hpp>
@@ -237,7 +233,7 @@ static bool generateSearchKey(
     BYTE* out_pSearchKey );
 static bool convertKeySegment(
     BYTE* pKeySegment,
-    OSNDXFIO:: eTYPE in_keySegmentType );
+    BYTE  in_keySegmentType );
 static void swap( U16* pU16 );
 static void swap( U32* pU32 );
 
@@ -1560,15 +1556,15 @@ static bool generateSearchKey( const OSNDXFIO::sHANDLE* pHandle,
 }
 
 /*============================================================================*/
-static bool convertKeySegment( BYTE*            pKeySegment,
-                               OSNDXFIO:: eTYPE in_keySegmentType)
+static bool convertKeySegment( BYTE* pKeySegment,
+                               BYTE  in_keySegmentType)
 /*============================================================================*/
 {
     bool bResult = true;
     U16* pU16;
     U32* pU32;
 
-    switch ( in_keySegmentType )
+    switch ( (OSNDXFIO::eTYPE)in_keySegmentType )
     {
     case OSNDXFIO::tBYTE:
         // tBYTE, do nothing.
@@ -1576,26 +1572,26 @@ static bool convertKeySegment( BYTE*            pKeySegment,
     case OSNDXFIO::tS16:
         pU16 = (U16*)pKeySegment;
         *pU16 += U16(0x8000);     // Signed correction.
-        #ifndef CPU_BIG_ENDIAN    // default CPU_LITTLE_ENDIAN!
+        #ifndef CPU_BIG_ENDIAN    // Default CPU_LITTLE_ENDIAN!
         swap( pU16 );
         #endif
         break;
     case OSNDXFIO::tU16:
         pU16 = (U16*)pKeySegment;
-        #ifndef CPU_BIG_ENDIAN    // default CPU_LITTLE_ENDIAN!
+        #ifndef CPU_BIG_ENDIAN    // Default CPU_LITTLE_ENDIAN!
         swap( pU16 );
         #endif
         break;
     case OSNDXFIO::tS32:
         pU32 = (U32*)pKeySegment;
         *pU32 += U32(0x80000000); // Signed correction.
-        #ifndef CPU_BIG_ENDIAN    // default CPU_LITTLE_ENDIAN!
+        #ifndef CPU_BIG_ENDIAN    // Default CPU_LITTLE_ENDIAN!
         swap( pU32 );
         #endif
         break;
     case OSNDXFIO::tU32:
         pU32 = (U32*)pKeySegment;
-        #ifndef CPU_BIG_ENDIAN    // default CPU_LITTLE_ENDIAN!
+        #ifndef CPU_BIG_ENDIAN    // Default CPU_LITTLE_ENDIAN!
         swap( pU32 );
         #endif
         break;

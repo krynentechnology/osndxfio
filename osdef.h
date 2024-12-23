@@ -23,9 +23,6 @@
  */
 
 // ---- include files ----
-#include <mem.h>
-#include <conio.h>
-
 #ifdef __CPPBUILDERIDE__
 #ifdef __cplusplus
 using namespace std;

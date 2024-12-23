@@ -20,9 +20,9 @@
  */
 
 // ---- system includes ----
-#include <stdio.h>
 #include <errno.h>
-#include <mem.h>
+#include <stdio.h>
+#include <string.h>
 #include <time.h>
 #include <sys\timeb.h>
 
