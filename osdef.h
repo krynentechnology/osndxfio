@@ -22,7 +22,9 @@
  *  Description: Type, symbol and mocro definitions
  */
 
-// ---- include files ----
+// ---- system include files ----
+#include <conio.h>
+
 #ifdef __CPPBUILDERIDE__
 #ifdef __cplusplus
 using namespace std;
@@ -31,7 +33,13 @@ using namespace std;
 
 // ---- type definitions ----
 typedef void                  VOID_FUNC();
-
+#ifdef __TINYC__
+typedef _Bool                 bool;
+#else
+#ifndef __cplusplus
+typedef unsigned char         bool;
+#endif
+#endif
 typedef unsigned char         BYTE;
 typedef short                 S16;
 typedef unsigned short        U16;
@@ -54,10 +62,15 @@ typedef long double           R80;
 #define NO_FUNC               0    // Function NULL pointer
 #define ENUM_MIN              (-1)
 #define ENUM_FIRST            0
+#define ERROR                 (-1)
+#define INVALID               (-1)
 #define INVALID_VALUE         (-1)
 #if !( defined( CPU_BIG_ENDIAN ) || defined( CPU_LITTLE_ENDIAN ))
   #define CPU_LITTLE_ENDIAN        // Default little endian CPU
 #endif
+#define FALSE                 0
+#define TRUE                  1
+
 
 // ---- macro definitions ----
 #define MAX( a, b )           ( ( (a) > (b) ) ? (a) : (b) )

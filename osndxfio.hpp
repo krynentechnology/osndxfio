@@ -284,10 +284,10 @@ bool close();
 *  @return True if successful. On false error could be retrieved with
 *          getLastError().
 */
-bool rebuild( const STRING          in_databaseName,
-                    U16             in_nrOfKeys,
-                    const sKEY_DESC in_keyDescriptor[],
-                    U32             in_maxDataSize = MAXIMUM_DATA_SIZE );
+bool rebuild( const STRING    in_databaseName,
+              U16             in_nrOfKeys,
+              const sKEY_DESC in_keyDescriptor[],
+              U32             in_maxDataSize = MAXIMUM_DATA_SIZE );
 
 /** Returns number of keys of open database. */
 U16 getNrOfKeys();

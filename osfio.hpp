@@ -154,7 +154,7 @@ U32 position();
 *  @param    in_position   The byte offset from the start of the file.
 *  @return   true if successful.
 */
-bool truncate( U32 in_filePointer );
+bool truncate( U32 in_position );
 
 /**
 *  Returns time of last modification in seconds since midnight (00:00:00),
