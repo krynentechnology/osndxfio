@@ -35,16 +35,13 @@
 
 // ---- constructor ----
 OSFIO::OSFIO()
-:
-    m_handle( ERROR )
-{
+    :
+    m_handle( ERROR ) {
 }
 
 // ---- destructor ----
-OSFIO::~OSFIO()
-{
-    if ( m_handle != ERROR )
-    {
+OSFIO::~OSFIO() {
+    if ( m_handle != ERROR ) {
         close();
     }
 }
@@ -54,8 +51,7 @@ bool OSFIO::open( const STRING in_fileName,
                   bool         in_readOnly )
 /*============================================================================*/
 {
-    if ( m_handle != ERROR )
-    {
+    if ( m_handle != ERROR ) {
         return false;
     }
 
@@ -68,13 +64,11 @@ bool OSFIO::open( const STRING in_fileName,
 bool OSFIO::create( const STRING in_fileName )
 /*============================================================================*/
 {
-    if ( m_handle != ERROR )
-    {
+    if ( m_handle != ERROR ) {
         return false;
     }
 
-    if ( open( in_fileName, READ_ONLY_ACCESS ))
-    {
+    if ( open( in_fileName, READ_ONLY_ACCESS )) {
         close();
         return false;
     }
@@ -88,8 +82,7 @@ bool OSFIO::create( const STRING in_fileName )
 bool OSFIO::close()
 /*============================================================================*/
 {
-    if ( m_handle == ERROR )
-    {
+    if ( m_handle == ERROR ) {
         return false;
     }
 
@@ -101,22 +94,11 @@ bool OSFIO::close()
 }
 
 /*============================================================================*/
-bool OSFIO::erase( const STRING in_fileName )
-/*============================================================================*/
-{
-    // Allow to delete. Might be read-only.
-    ::chmod( in_fileName, ( S_IWRITE | S_IREAD ));
-
-    return ( ::remove( in_fileName ) == SUCCESSFUL );
-}
-
-/*============================================================================*/
 bool OSFIO::write( const POINTER in_dataPtr,
                    U32           in_dataSize )
 /*============================================================================*/
 {
-    if ( m_handle == ERROR )
-    {
+    if ( m_handle == ERROR ) {
         return false;
     }
 
@@ -129,15 +111,16 @@ bool OSFIO::write( U32           in_position,
                    U32           in_dataSize )
 /*============================================================================*/
 {
-    if ( m_handle == ERROR )
-    {
+    if ( m_handle == ERROR ) {
         return false;
     }
 
+    bool eof_position = ( in_position == EOF_POSITION );
+
     return (( ::lseek( int( m_handle ),
-        (( in_position == EOF_POSITION ) ? 0 : in_position ),
-        (( in_position == EOF_POSITION ) ? SEEK_END : SEEK_SET )) != ERROR ) &&
-        ( ::write( int( m_handle ), in_dataPtr, in_dataSize ) != ERROR ));
+                       ( eof_position ? 0 : in_position ),
+                       ( eof_position ? SEEK_END : SEEK_SET )) != ERROR ) &&
+            ( ::write( int( m_handle ), in_dataPtr, in_dataSize ) != ERROR ));
 }
 
 /*============================================================================*/
@@ -145,13 +128,11 @@ bool OSFIO::read( POINTER out_dataPtr,
                   U32     in_dataSize )
 /*============================================================================*/
 {
-    if ( m_handle == ERROR )
-    {
+    if ( m_handle == ERROR ) {
         return false;
     }
 
-    return ( (U32)::read( int( m_handle ), out_dataPtr, in_dataSize ) ==
-        in_dataSize );
+    return ( (U32)::read( int( m_handle ), out_dataPtr, in_dataSize ) == in_dataSize );
 }
 
 /*============================================================================*/
@@ -160,22 +141,20 @@ bool OSFIO::read( U32     in_position,
                   U32     in_dataSize )
 /*============================================================================*/
 {
-    if ( m_handle == ERROR )
-    {
+    if ( m_handle == ERROR ) {
         return false;
     }
 
     return (( ::lseek( int( m_handle ), in_position, SEEK_SET ) != ERROR ) &&
-        ( (U32)::read( int( m_handle ), out_dataPtr, in_dataSize ) ==
-        in_dataSize ));
+            ( (U32)::read( int( m_handle ), out_dataPtr, in_dataSize ) ==
+              in_dataSize ));
 }
 
 /*============================================================================*/
 bool OSFIO::eof()
 /*============================================================================*/
 {
-    if ( m_handle == ERROR )
-    {
+    if ( m_handle == ERROR ) {
         return false;
     }
 
@@ -200,16 +179,14 @@ U32 OSFIO::position()
 bool OSFIO::truncate( U32 in_position )
 /*============================================================================*/
 {
-    if ( m_handle == ERROR )
-    {
+    if ( m_handle == ERROR ) {
         return false;
     }
 
     U32  fileSize  = size();
     bool status_ok = ( fileSize != (U32)INVALID_VALUE );
 
-    if ( status_ok )
-    {
+    if ( status_ok ) {
         status_ok = ( in_position < fileSize );
         status_ok = status_ok && ( ::chsize( int( m_handle ), in_position ) != ERROR );
         // set file pointer correct
@@ -225,11 +202,19 @@ U32 OSFIO::timestamp()
 {
     struct stat statBuffer;
 
-    if ( ::fstat( int( m_handle ), &statBuffer ) == 0 )
-    {
+    if ( ::fstat( int( m_handle ), &statBuffer ) == 0 ) {
         return (U32)statBuffer.st_mtime;
     }
 
     return (U32)INVALID_VALUE;
 }
 
+/*============================================================================*/
+bool OSFIO::erase( const STRING in_fileName )
+/*============================================================================*/
+{
+    // Allow to delete. Might be read-only.
+    ::chmod( in_fileName, ( S_IWRITE | S_IREAD ));
+
+    return ( ::remove( in_fileName ) == SUCCESSFUL );
+}

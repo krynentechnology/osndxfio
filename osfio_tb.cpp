@@ -50,13 +50,10 @@ void printResult( bool passed )
 {
     ::printf( "- %s\n", passed ? "Passed" : "Failed" );
 
-    if ( passed )
-    {
-      passedCounter++;
-    }
-    else
-    {
-      failedCounter++;
+    if ( passed ) {
+        passedCounter++;
+    } else {
+        failedCounter++;
     }
 }
 
@@ -71,11 +68,11 @@ void printDescription( U16 testNumber, const STRING description )
     pLocalTime = ::localtime( &systemTime.time );
 
     ::printf( "%02d:%02d:%02d.%03d OSFIO T%-5d ",
-      pLocalTime->tm_hour,
-      pLocalTime->tm_min,
-      pLocalTime->tm_sec,
-      systemTime.millitm,
-      testNumber );
+              pLocalTime->tm_hour,
+              pLocalTime->tm_min,
+              pLocalTime->tm_sec,
+              systemTime.millitm,
+              testNumber );
 
     ::printf( "%s ", description );
 }
@@ -93,8 +90,7 @@ bool test1( void )
     // check for file exist
     bool status_ok = !handle.open( file_name, READ_ONLY_ACCESS );
 
-    if ( !status_ok )
-    {
+    if ( !status_ok ) {
         status_ok = handle.close();
         status_ok = status_ok && handle.erase( file_name );
         status_ok = status_ok && !handle.open( file_name, READ_ONLY_ACCESS );
@@ -129,8 +125,7 @@ bool test2( void )
 
     bool status_ok = !handle.open( file_name, READ_ONLY_ACCESS );
 
-    if ( !status_ok )
-    {
+    if ( !status_ok ) {
         status_ok = handle.close();
         status_ok = status_ok && handle.erase( file_name );
         status_ok = status_ok && !handle.open( file_name, READ_ONLY_ACCESS );
@@ -142,27 +137,26 @@ bool test2( void )
 
     status_ok = status_ok && handle.open( file_name );
 
-    for ( int i = 0; i < sizeof( test_data1 ); i++ )
-    {
+    for ( int i = 0; i < sizeof( test_data1 ); i++ ) {
         test_data1[ i ] = (BYTE)i;
     }
 
     memset( test_data2, 0, DATA_SIZE );
 
     status_ok = status_ok && (( file_pointer = handle.position() ) !=
-        (U32)INVALID_VALUE );
+                              (U32)INVALID_VALUE );
 
     status_ok = status_ok && ( file_pointer == 0);
 
     status_ok = status_ok && handle.write( test_data1, DATA_SIZE );
 
     status_ok = status_ok && (( file_size = handle.size() ) !=
-      (U32)INVALID_VALUE );
+                              (U32)INVALID_VALUE );
 
     status_ok = status_ok && ( file_size == DATA_SIZE );
 
     status_ok = status_ok && (( file_pointer = handle.position() ) !=
-      (U32)INVALID_VALUE );
+                              (U32)INVALID_VALUE );
 
     status_ok = status_ok && ( file_size == file_pointer );
 
@@ -192,19 +186,19 @@ bool  test3( void )
     bool status_ok = handle.open( file_name, READ_WRITE_ACCESS );
 
     status_ok = status_ok && (( file_pointer = handle.position() ) !=
-        (U32)INVALID_VALUE );
+                              (U32)INVALID_VALUE );
 
     status_ok = status_ok && ( file_pointer == 0 );
 
     status_ok = status_ok && handle.write( EOF_POSITION, test_data1, DATA_SIZE );
 
     status_ok = status_ok && (( file_size = handle.size() ) !=
-        (U32)INVALID_VALUE );
+                              (U32)INVALID_VALUE );
 
     status_ok = status_ok && ( file_size == ( 2 * DATA_SIZE ) );
 
     status_ok = status_ok && (( file_pointer = handle.position() ) !=
-        (U32)INVALID_VALUE );
+                              (U32)INVALID_VALUE );
 
     status_ok = status_ok && ( file_size == file_pointer );
 
@@ -219,12 +213,12 @@ bool  test3( void )
     status_ok = status_ok && handle.truncate( DATA_SIZE );
 
     status_ok = status_ok && (( file_size = handle.size() ) !=
-        (U32)INVALID_VALUE );
+                              (U32)INVALID_VALUE );
 
     status_ok = status_ok && ( file_size == DATA_SIZE );
 
     status_ok = status_ok && (( file_pointer = handle.position() ) !=
-        (U32)INVALID_VALUE );
+                              (U32)INVALID_VALUE );
 
     status_ok = status_ok && ( file_size == file_pointer );
 
@@ -237,8 +231,7 @@ bool  test3( void )
     return status_ok;
 }
 
-int main()
-{
+int main() {
     time_t startTime;
     ::time( &startTime );
     ::printf( "OSFIO TEST started at %s\n", ::ctime( &startTime ) );
@@ -254,9 +247,8 @@ int main()
     handle.erase( file_name );
 
     ::printf( "\nOSFIO TEST %d passed, %d failed, stopped at %s\n\n",
-      passedCounter, failedCounter, ::ctime( &startTime ));
+              passedCounter, failedCounter, ::ctime( &startTime ));
 
     // WAIT_FOR_KEYPRESSED;
     return 0;
 }
-

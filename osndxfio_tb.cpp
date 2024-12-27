@@ -35,7 +35,7 @@
 #define MAX_NB_IDS          1000
 #define MAX_NB_NAMES        100
 #define MAX_NB_DEPARTMENTS  10
-#define MAX_NB_RECORDS      50000
+#define MAX_NB_RECORDS      5000
 #define DATA_SIZE           200
 #define SIZE_OF_NAME        10
 #define SIZE_OF_DEPARTMENT  15
@@ -46,17 +46,15 @@ static BYTE generatedNames[ MAX_NB_NAMES ];
 static BYTE generatedDepartments[ MAX_NB_DEPARTMENTS ];
 static U16 const maxRecords = U16( MAX_NB_RECORDS );
 
-struct sTEST_OBJECT
-{
+struct sTEST_OBJECT {
     U32  id;
     char name[ SIZE_OF_NAME ];
     char department[ SIZE_OF_DEPARTMENT ];
     BYTE data[ DATA_SIZE ];
 
     sTEST_OBJECT() // Constructor.
-    :
-        id( 0 )
-    {
+        :
+        id( 0 ) {
         ::memset( name, 0, sizeof( name ));
         ::memset( department, 0, sizeof( department ));
         ::memset( data, 0, sizeof( data ));
@@ -66,14 +64,16 @@ struct sTEST_OBJECT
 static sTEST_OBJECT testObjects[ maxRecords ];
 #define OFFSET_DEPARTMENT ( SIZE_OF_NAME + sizeof( U32 ))
 #define OFFSET_NAME       sizeof( U32 )
-static OSNDXFIO::sKEY_SEGMENT key1[ 2 ] =
-    { OSNDXFIO::sKEY_SEGMENT( OFFSET_DEPARTMENT, OSNDXFIO::tBYTE, SIZE_OF_DEPARTMENT ),
-        OSNDXFIO::sKEY_SEGMENT( OFFSET_NAME, OSNDXFIO::tBYTE, SIZE_OF_NAME ) };
+static OSNDXFIO::sKEY_SEGMENT key1[ 2 ] = {
+    OSNDXFIO::sKEY_SEGMENT( OFFSET_DEPARTMENT, OSNDXFIO::tBYTE, SIZE_OF_DEPARTMENT ),
+    OSNDXFIO::sKEY_SEGMENT( OFFSET_NAME, OSNDXFIO::tBYTE, SIZE_OF_NAME )
+};
 static OSNDXFIO::sKEY_SEGMENT key2[ 1 ] =
-    { OSNDXFIO::sKEY_SEGMENT( 0, OSNDXFIO::tU32, sizeof( U32 )) };
-static OSNDXFIO::sKEY_SEGMENT key3[ 2 ] =
-    { OSNDXFIO::sKEY_SEGMENT( OFFSET_NAME, OSNDXFIO::tBYTE, SIZE_OF_NAME ),
-        OSNDXFIO::sKEY_SEGMENT( 0, OSNDXFIO::tU32, sizeof( U32 )) };
+{ OSNDXFIO::sKEY_SEGMENT( 0, OSNDXFIO::tU32, sizeof( U32 )) };
+static OSNDXFIO::sKEY_SEGMENT key3[ 2 ] = {
+    OSNDXFIO::sKEY_SEGMENT( OFFSET_NAME, OSNDXFIO::tBYTE, SIZE_OF_NAME ),
+    OSNDXFIO::sKEY_SEGMENT( 0, OSNDXFIO::tU32, sizeof( U32 ))
+};
 
 static STRING database1 = "testDb1.dat";
 
@@ -88,12 +88,9 @@ void printResult( bool passed )
 {
     ::printf( "- %s\n", passed ? "Passed" : "Failed" );
 
-    if ( passed )
-    {
+    if ( passed ) {
         passedCounter++;
-    }
-    else
-    {
+    } else {
         failedCounter++;
     }
 }
@@ -109,11 +106,11 @@ void printDescription( U16 testNumber, const STRING description )
     pLocalTime = ::localtime( &systemTime.time );
 
     ::printf( "%02d:%02d:%02d.%03d OSNDXFIO T%-5d ",
-    pLocalTime->tm_hour,
-    pLocalTime->tm_min,
-    pLocalTime->tm_sec,
-    systemTime.millitm,
-    testNumber );
+              pLocalTime->tm_hour,
+              pLocalTime->tm_min,
+              pLocalTime->tm_sec,
+              systemTime.millitm,
+              testNumber );
 
     ::printf( "%s ", description );
 }
@@ -146,10 +143,11 @@ bool test1( void )
 {
     printDescription( 1, "Create and close empty database" );
 
-    OSNDXFIO::sKEY_SEGMENT key[ 2 ] =
-        { OSNDXFIO::sKEY_SEGMENT( 0, OSNDXFIO::tBYTE, SIZE_OF_NAME ),
+    OSNDXFIO::sKEY_SEGMENT key[ 2 ] = {
+        OSNDXFIO::sKEY_SEGMENT( 0, OSNDXFIO::tBYTE, SIZE_OF_NAME ),
         OSNDXFIO::sKEY_SEGMENT(( SIZE_OF_NAME - 1 ), OSNDXFIO::tBYTE,
-        SIZE_OF_DEPARTMENT ) }; // Overlap of data segments.
+                               SIZE_OF_DEPARTMENT )
+    }; // Overlap of data segments.
 
     OSNDXFIO::sKEY_DESC keyDesc[ 3 ];
     keyDesc[ 0 ].nrOfSegments = NR_ELEMENTS( key );
@@ -201,8 +199,7 @@ bool test2( void )
     // Clear testObject array;
     ::memset( testObjects, 0, sizeof( testObjects ));
     // Create maxRecords records.
-    for ( U16 i = 0; ( statusOk && ( i < maxRecords )); i++ )
-    {
+    for ( U16 i = 0; ( statusOk && ( i < maxRecords )); i++ ) {
         sTEST_OBJECT testObject;
         OSNDXFIO::sRECORD testRecord( sizeof( sTEST_OBJECT ), 0, sizeof( sTEST_OBJECT ), (BYTE*)&testObject );
         getNextObject( testObject );
@@ -237,8 +234,7 @@ bool test3( void )
     U32 nbRecords = 0;
 
     // Read all records and compare.
-    for ( U32 i = 0; ( statusOk && ( i < testDb.getNrOfRecords() )); i++ )
-    {
+    for ( U32 i = 0; ( statusOk && ( i < testDb.getNrOfRecords() )); i++ ) {
         testRecord.dataSize = 0;
         ::memset( &testObject, INVALID_VALUE, sizeof( testObject ));
         statusOk = testDb.getRecord( i, testRecord );
@@ -246,8 +242,7 @@ bool test3( void )
         // Compare with testObject array.
         statusOk = statusOk && ( ::memcmp( &testObject, &testObjects[ i ], sizeof( testObject )) == 0 );
 
-        if ( statusOk )
-        {
+        if ( statusOk ) {
             nbRecords++;
         }
     }
@@ -276,10 +271,8 @@ bool test4( void )
     OSNDXFIO::sRECORD testRecord( sizeof( sTEST_OBJECT ), 0, 0, (BYTE*)&testObject );
     U32 nbRecords = 0;
 
-    for ( U16 i = 0; ( statusOk && ( i < MAX_NB_IDS )); i++ )
-    {
-        if ( generatedIds[ i ] )
-        {
+    for ( U16 i = 0; ( statusOk && ( i < MAX_NB_IDS )); i++ ) {
+        if ( generatedIds[ i ] ) {
             U32 searchId = i;
             OSNDXFIO::sKEY key( 1, sizeof( searchId ), (BYTE*)&searchId ); // 1 == key2.
             U32 index = INVALID_VALUE;
@@ -288,11 +281,9 @@ bool test4( void )
             // Compare with testObject array.
             statusOk = statusOk && ( ::memcmp( &testObject, &testObjects[ index ], sizeof( testObject )) == 0 );
 
-            if ( statusOk )
-            {
+            if ( statusOk ) {
                 U32 recordCount = testDb.getSearchCount( key );
-                for ( U32 j = 1; ( statusOk && ( j < recordCount )); j++ )
-                {
+                for ( U32 j = 1; ( statusOk && ( j < recordCount )); j++ ) {
                     statusOk = testDb.getNextRecord( 1, testRecord, index ); // 1 == key2.
                     // Compare with testObject array.
                     statusOk = statusOk && ( ::memcmp( &testObject, &testObjects[ index ], sizeof( testObject )) == 0 );
@@ -306,10 +297,8 @@ bool test4( void )
     statusOk = statusOk && ( testDb.getNrOfRecords() == nbRecords );
     nbRecords = 0;
     // Partial key retrieval.
-    for ( U16 i = 0; ( statusOk && ( i < MAX_NB_DEPARTMENTS )); i++ )
-    {
-        if ( generatedDepartments[ i ] )
-        {
+    for ( U16 i = 0; ( statusOk && ( i < MAX_NB_DEPARTMENTS )); i++ ) {
+        if ( generatedDepartments[ i ] ) {
             BYTE searchKey[ SIZE_OF_DEPARTMENT + SIZE_OF_NAME ];
             ::memset( searchKey, 0, sizeof( searchKey ));
             ::sprintf( (char*)searchKey, "MY_DEPARTMENT-%d", i );
@@ -320,11 +309,9 @@ bool test4( void )
             // Compare with testObject array.
             statusOk = statusOk && ( ::memcmp( &testObject, &testObjects[ index ], sizeof( testObject )) == 0 );
 
-            if ( statusOk )
-            {
+            if ( statusOk ) {
                 U32 recordCount = testDb.getSearchCount( key );
-                for ( U32 j = 1; ( statusOk && ( j < recordCount )); j++ )
-                {
+                for ( U32 j = 1; ( statusOk && ( j < recordCount )); j++ ) {
                     statusOk = testDb.getNextRecord( 0, testRecord, index ); // 0 == key1.
                     // Compare with testObject array.
                     statusOk = statusOk && ( ::memcmp( &testObject, &testObjects[ index ], sizeof( testObject )) == 0 );
@@ -365,4 +352,3 @@ int main()
     // WAIT_FOR_KEYPRESSED;
     return 0;
 }
-

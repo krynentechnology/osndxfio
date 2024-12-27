@@ -56,7 +56,7 @@ typedef long double           R80;
 #define POINTER               void*
 #define HANDLE                void*
 #ifdef  NULL
-  #undef NULL
+#undef NULL
 #endif
 #define NULL                  0
 #define NO_FUNC               0    // Function NULL pointer
@@ -65,12 +65,13 @@ typedef long double           R80;
 #define ERROR                 (-1)
 #define INVALID               (-1)
 #define INVALID_VALUE         (-1)
+
 #if !( defined( CPU_BIG_ENDIAN ) || defined( CPU_LITTLE_ENDIAN ))
-  #define CPU_LITTLE_ENDIAN        // Default little endian CPU
+#define CPU_LITTLE_ENDIAN        // Default little endian CPU
 #endif
+
 #define FALSE                 0
 #define TRUE                  1
-
 
 // ---- macro definitions ----
 #define MAX( a, b )           ( ( (a) > (b) ) ? (a) : (b) )
@@ -79,8 +80,6 @@ typedef long double           R80;
 #define NEG( a )              ( ( (a) <= 0 ) ? (a) : -(a) )
 #define BOUND( a, b, c )      ( ( (b) < (a) ) ? (a) : ( ( (b) > (c) ) ? (c) : (b) ) )
 #define SIGN( a )             ( ( (a) >= 0 ) ? 1 : (-1) )
-#define IS_BOUNDED( a, b, c)  ( ( ( (a) >= (b) ) && ( (a) <= (c) ) ) ? true : false )
-#define IN_RANGE( a, b, c )   ( ( ( (a) > (b) ) && ( (a) < (c) ) ) ? true : false )
 #define IS_ODD( x )           ( ( (x) & 1 ) != 0 )
 #define IS_EVEN( x )          ( ( (x) & 1 ) == 0 )
 #define ODD_EVEN( x )         ( (x) & 1 )
@@ -88,9 +87,19 @@ typedef long double           R80;
 #define MEMEQC( a, b )        ( memcmp( (a), (b), ( sizeof (b) - 1 ) ) == 0 )
 #define NR_ELEMENTS( a )      ( sizeof ( (a) ) / sizeof ( ( (a)[ 0 ] ) ) )
 #define LENGTH( a )           ( sizeof ( (a) ) - 1 )
+
+#ifdef __cplusplus
+#define IS_BOUNDED( a, b, c)  ( ( ( (a) >= (b) ) && ( (a) <= (c) ) ) ? true : false )
+#define IN_RANGE( a, b, c )   ( ( ( (a) > (b) ) && ( (a) < (c) ) ) ? true : false )
 #define SUCCESSFUL_RETURN     return true
 #define UNSUCCESSFUL_RETURN   return false
+#else
+#define IS_BOUNDED( a, b, c)  ( ( ( (a) >= (b) ) && ( (a) <= (c) ) ) ? TRUE : FALSE )
+#define IN_RANGE( a, b, c )   ( ( ( (a) > (b) ) && ( (a) < (c) ) ) ? TRUE : FALSE )
+#define SUCCESSFUL_RETURN     return TRUE
+#define UNSUCCESSFUL_RETURN   return FALSE
+#endif
+
 #define WAIT_FOR_KEYPRESSED   getch()
 
 #endif /* OSDEF_H */
-

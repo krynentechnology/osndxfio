@@ -54,18 +54,15 @@
 
 /** Index record status. Do not modify or erase regarding backward
     compatibility! */
-enum eINDEX_STATUS
-{
+enum eINDEX_STATUS {
     eRESERVED = -2, // Used for file storage.
     eOK       = -1, // Used for file storage.
     eDELETED  = 0   // Index id >= 0.
 };
 
 /** Index structure. The index structure is followed by the application key. */
-struct sINDEX
-{
-    union
-    {
+struct sINDEX {
+    union {
         S32 status;           // Status of the index record
         S32 prevDeletedIndex; // The offset is not valid when record is deleted.
     };                        // If >= zero this field points to the previous
@@ -77,19 +74,17 @@ struct sINDEX
     /** KEY **/               // Start of application key
 
     sINDEX()                  // Constructor.
-    :
+        :
         status( eRESERVED ),
         offset( U32( INVALID_VALUE )),
         dataOffset( U32( INVALID_VALUE )),
         dataSize( 0 ),
-        recordRef( 0 )
-    {
+        recordRef( 0 ) {
     }
 };
 
 /** Data record id. Do not modify or erase regarding backward compatibility! */
-enum eRECORD_ID
-{
+enum eRECORD_ID {
     eHEADER       = -4,
     eINDEX        = -3,
     eNEXT_INDEX   = -2,
@@ -98,22 +93,19 @@ enum eRECORD_ID
 };
 
 /** Data record struct. Adjacent this record the data is saved. */
-struct sDATA
-{
-    S32 id;                 // Type of data record (eRECORD_ID).
-    U32 recordRef;          // Verification reference for data records, should
-    union                   // match with record reference given by index record.
-    {
-        U32 size;           // Number of bytes occupied. Could be less than space
-                            // to offset to next record.
-        U32 nextIndexOffset;  // Reference to next index record if record id ==
-    };                      // NEXT_INDEX.
-    U32 offset;             // Offset to next record.
+struct sDATA {
+    S32 id;                  // Type of data record (eRECORD_ID).
+    U32 recordRef;           // Verification reference for data records, should
+    union {                  // match with record reference given by index record.
+        U32 size;            // Number of bytes occupied. Could be less than space
+                             // to offset to next record.
+        U32 nextIndexOffset; // Reference to next index record if record id ==
+    };                       // NEXT_INDEX.
+    U32 offset;              // Offset to next record.
 };
 
 /** Database header struct. */
-struct sHEADER
-{
+struct sHEADER {
     U32 version;
     U32 recordReference;    // Verification reference, increased every
                             // record creation.
@@ -131,7 +123,7 @@ struct sHEADER
     U16 keyDescriptorSize;  // Size sum of all key descriptor segments,
                             // key descriptor is stored adjacent to header.
     sHEADER()               // Constructor.
-    :
+        :
         version( NDXFIO_VERSION ),
         recordReference( 0 ), // Reference incremented every record creation.
         nextFreeData( 0 ),
@@ -142,17 +134,15 @@ struct sHEADER
         reservedIndexRecords( OSNDXFIO::DEFAULT_RESERVED_INDEX_RECORDS ),
         nrOfKeys( 0 ),
         totalKeySize( 0 ),
-        keyDescriptorSize( 0 )
-    {
+        keyDescriptorSize( 0 ) {
     }
 };
 
 /** Key index struct. */
-struct sKEY_INDEX
-{
+struct sKEY_INDEX {
     U32* apRecord;
-    U32  recordCount;  // ( Record count * sizeof( *apRecord )) == memory
-                       // allocated for apRecord.
+    U32  recordCount; // ( Record count * sizeof( *apRecord )) == memory
+                      // allocated for apRecord.
     U32  position;
     U32  selectionStart;
     U32  selectionEnd;
@@ -161,7 +151,7 @@ struct sKEY_INDEX
     bool bSorted;
 
     sKEY_INDEX() // Constructor.
-    :
+        :
         apRecord( NULL ),
         recordCount( 0 ),
         position( U32( INVALID_VALUE )),
@@ -169,14 +159,12 @@ struct sKEY_INDEX
         selectionEnd( U32( INVALID_VALUE )),
         keyOffset( U16( INVALID_VALUE )),
         keySize( 0 ),
-        bSorted( false )
-    {
+        bSorted( false ) {
     }
 };
 
 /** Database handle list */
-struct OSNDXFIO::sHANDLE : sHEADER  // Inherit sHEADER
-{
+struct OSNDXFIO::sHANDLE : sHEADER { // Inherit sHEADER
     OSNDXFIO::sHANDLE* pPrevious;
     OSNDXFIO::sHANDLE* pNext;
     OSFIO fileHandle;
@@ -192,7 +180,7 @@ struct OSNDXFIO::sHANDLE : sHEADER  // Inherit sHEADER
     U16 totalIndexSize;
 
     sHANDLE() // Constructor.
-    :
+        :
         pPrevious( NULL ),
         pNext( NULL ),
         fileHandle(),
@@ -203,8 +191,7 @@ struct OSNDXFIO::sHANDLE : sHEADER  // Inherit sHEADER
         apKey( NULL ),
         apKeyDescriptor( NULL ),
         allocatedIndexKeys( 0 ),
-        totalIndexSize( 0 )
-    {
+        totalIndexSize( 0 ) {
     }
 };
 
@@ -242,17 +229,14 @@ static OSNDXFIO::sHANDLE* pDatabaseListEntry = NULL;
 
 // ---- constructor ----
 OSNDXFIO::OSNDXFIO()
-:
+    :
     m_handle( NULL ),
-    m_error( NO_ERROR )
-{
+    m_error( NO_ERROR ) {
 }
 
 // ---- destructor ----
-OSNDXFIO::~OSNDXFIO()
-{
-    if ( NULL != m_handle )
-    {
+OSNDXFIO::~OSNDXFIO() {
+    if ( NULL != m_handle ) {
         close();
     }
 }
@@ -267,28 +251,24 @@ bool OSNDXFIO::open( const STRING in_databaseName,
     // Check function parameters.
     bool statusOk = isDatabaseNameValid( in_databaseName );
 
-    if ( statusOk )
-    {
+    if ( statusOk ) {
         m_error  = DATABASE_ALREADY_OPENED;
         statusOk = ( NULL == m_handle );
     }
 
-    if ( statusOk )
-    {
+    if ( statusOk ) {
         m_handle = new sHANDLE;
         m_error  = MEMORY_ALLOCATION_ERROR;
         statusOk = ( NULL != m_handle );
     }
 
     // Check database existence.
-    if ( statusOk )
-    {
+    if ( statusOk ) {
         statusOk = m_handle->fileHandle.open( in_databaseName, in_readOnly );
     }
 
     sDATA data;
-    if ( statusOk )
-    {
+    if ( statusOk ) {
         // Read and verify header.
         m_error  = DATABASE_IO_ERROR;
         statusOk = statusOk && m_handle->fileHandle.read( &data, sizeof( data ));
@@ -298,24 +278,21 @@ bool OSNDXFIO::open( const STRING in_databaseName,
         statusOk = statusOk && m_handle->fileHandle.read( m_handle, sizeof( sHEADER ));
     }
 
-    if ( statusOk )
-    {
+    if ( statusOk ) {
         U64 allocatedIndexKeys = m_handle->nrOfIndexRecords + in_allocatedIndexKeys;
         m_error = MEMORY_ALLOCATION_ERROR;
         // Initialize input parameters.
-        if ( allocatedIndexKeys < MAX_MALLOC )
-        {
+        if ( allocatedIndexKeys < MAX_MALLOC ) {
             m_handle->readOnly = in_readOnly;
             m_handle->allocatedIndexKeys  = in_readOnly ?
-                m_handle->nrOfIndexRecords : (U32)allocatedIndexKeys;
+                                            m_handle->nrOfIndexRecords : (U32)allocatedIndexKeys;
             m_handle->pDatabaseName = (char*)::malloc( ::strlen( in_databaseName ) + 1 );
         }
 
         statusOk = ( NULL != m_handle->pDatabaseName );
     }
 
-    if ( statusOk )
-    {
+    if ( statusOk ) {
         ::strcpy( m_handle->pDatabaseName, in_databaseName );
 
         m_handle->apKeyIndex = (sKEY_INDEX*) ::malloc( m_handle->nrOfKeys * sizeof( sKEY_INDEX ));
@@ -325,8 +302,7 @@ bool OSNDXFIO::open( const STRING in_databaseName,
         statusOk = statusOk && ( NULL != m_handle->apKeyDescriptor );
     }
 
-    if ( statusOk )
-    {
+    if ( statusOk ) {
         U16 totalSegmentSize = 0;
         U16 keyOffset = sizeof( sINDEX );
 
@@ -335,36 +311,32 @@ bool OSNDXFIO::open( const STRING in_databaseName,
         ::memset( m_handle->apKeyDescriptor, 0, ( m_handle->nrOfKeys * sizeof( sKEY_DESC )));
 
         // Read all key segments and key index records.
-        for ( U16 i = 0; statusOk && ( i < m_handle->nrOfKeys ); i++ )
-        {
+        for ( U16 i = 0; statusOk && ( i < m_handle->nrOfKeys ); i++ ) {
             // Read number of segments.
             statusOk = statusOk && m_handle->fileHandle.read(
-                &( m_handle->apKeyDescriptor[ i ].nrOfSegments ),
-                sizeof( m_handle->apKeyDescriptor[ 0 ].nrOfSegments ));
+                           &( m_handle->apKeyDescriptor[ i ].nrOfSegments ),
+                           sizeof( m_handle->apKeyDescriptor[ 0 ].nrOfSegments ));
 
-            if ( statusOk )
-            {
+            if ( statusOk ) {
                 totalSegmentSize = U16( m_handle->apKeyDescriptor[ i ].nrOfSegments *
-                    sizeof( *(m_handle->apKeyDescriptor[ 0 ].apSegment)));
+                                        sizeof( *(m_handle->apKeyDescriptor[ 0 ].apSegment)));
                 // Allocate memory for key segments.
                 m_handle->apKeyDescriptor[ i ].apSegment = (sKEY_SEGMENT*)
-                    ::malloc( totalSegmentSize );
+                        ::malloc( totalSegmentSize );
             }
 
             // Check if memory allocation was successful.
             statusOk = statusOk &&
-            ( NULL != m_handle->apKeyDescriptor[ i ].apSegment );
+                       ( NULL != m_handle->apKeyDescriptor[ i ].apSegment );
 
             // Read all segments per key.
             statusOk = statusOk && m_handle->fileHandle.read(
-            m_handle->apKeyDescriptor[ i ].apSegment, totalSegmentSize );
+                           m_handle->apKeyDescriptor[ i ].apSegment, totalSegmentSize );
 
-            if ( statusOk )
-            {
+            if ( statusOk ) {
                 U16 keySize = 0;
 
-                for ( U16 j = 0; j < m_handle->apKeyDescriptor[ i ].nrOfSegments; j++ )
-                {
+                for ( U16 j = 0; j < m_handle->apKeyDescriptor[ i ].nrOfSegments; j++ ) {
                     keySize += m_handle->apKeyDescriptor[ i ].apSegment[ j ].size;
                 }
 
@@ -378,20 +350,18 @@ bool OSNDXFIO::open( const STRING in_databaseName,
         }
     }
 
-    if ( statusOk )
-    {
+    if ( statusOk ) {
         U16 keyDescriptorSize = 0;
         U16 totalKeySize      = 0;
         m_error = INVALID_KEY_DESCRIPTOR;
         // Check validity key descriptor.
         statusOk = ( isKeyDescriptorValid( m_handle->nrOfKeys,
-            m_handle->apKeyDescriptor, keyDescriptorSize, totalKeySize ) &&
-            ( keyDescriptorSize == m_handle->keyDescriptorSize ) &&
-            ( totalKeySize == m_handle->totalKeySize ));
+                   m_handle->apKeyDescriptor, keyDescriptorSize, totalKeySize ) &&
+                   ( keyDescriptorSize == m_handle->keyDescriptorSize ) &&
+                   ( totalKeySize == m_handle->totalKeySize ));
     }
 
-    if ( statusOk )
-    {
+    if ( statusOk ) {
         m_handle->totalIndexSize = (U16)( sizeof( sINDEX ) + m_handle->totalKeySize );
 
         m_error  = MEMORY_ALLOCATION_ERROR;
@@ -403,10 +373,9 @@ bool OSNDXFIO::open( const STRING in_databaseName,
         // Read all index and application key records.
         BYTE* pByte = (BYTE*)m_handle->apKey;
         U16   reservedIndexCounter = 0;
-        for ( U32 k = 0; statusOk && ( k < m_handle->nrOfIndexRecords ); k++ )
-        {
-            if ( reservedIndexCounter == m_handle->reservedIndexRecords )
-            { // Check record ids and read next index offset.
+        for ( U32 k = 0; statusOk && ( k < m_handle->nrOfIndexRecords ); k++ ) {
+            if ( reservedIndexCounter == m_handle->reservedIndexRecords ) {
+                // Check record ids and read next index offset.
                 statusOk = statusOk && m_handle->fileHandle.read( &data, sizeof( data ));
                 statusOk = statusOk && ( data.id == eNEXT_INDEX );
                 statusOk = statusOk && m_handle->fileHandle.read( data.nextIndexOffset, &data, sizeof( data ));
@@ -423,20 +392,15 @@ bool OSNDXFIO::open( const STRING in_databaseName,
         }
     }
 
-    if ( statusOk )
-    {
-        if ( NULL == pDatabaseListEntry )
-        {
+    if ( statusOk ) {
+        if ( NULL == pDatabaseListEntry ) {
             pDatabaseListEntry = m_handle;
             pDatabaseListEntry->pPrevious = NULL;
-        }
-        else
-        {
+        } else {
             // Find last NDXFIO handle.
             sHANDLE* pHandle = pDatabaseListEntry;
 
-            while ( NULL != pHandle->pNext )
-            {
+            while ( NULL != pHandle->pNext ) {
                 pHandle = pHandle->pNext;
             }
             // Update database handle administration.
@@ -447,13 +411,10 @@ bool OSNDXFIO::open( const STRING in_databaseName,
         m_handle->pNext = NULL;
         m_error = NO_ERROR;
 
-        for ( U16 keyId = 0; keyId < m_handle->nrOfKeys; keyId++  )
-        {
+        for ( U16 keyId = 0; keyId < m_handle->nrOfKeys; keyId++  ) {
             shellSort( m_handle, keyId );
         }
-    }
-    else
-    {
+    } else {
         close();
     }
 
@@ -469,17 +430,15 @@ bool OSNDXFIO::create( const STRING     in_databaseName,
 {
     // Check function parameters.
     if ( !isDatabaseNameValid( in_databaseName ) ||
-       ( 0 == in_nrOfKeys ) ||
-       ( NULL == in_keyDescriptor ) ||
-       ( in_reservedIndexRecords < 10 ) || // MINIMUM_RESERVED_INDEX_RECORDS
-       ( in_reservedIndexRecords > MAXIMUM_RESERVED_INDEX_RECORDS ))
-    {
+            ( 0 == in_nrOfKeys ) ||
+            ( NULL == in_keyDescriptor ) ||
+            ( in_reservedIndexRecords < 10 ) || // MINIMUM_RESERVED_INDEX_RECORDS
+            ( in_reservedIndexRecords > MAXIMUM_RESERVED_INDEX_RECORDS )) {
         m_error = INVALID_PARAMETERS;
         UNSUCCESSFUL_RETURN; // Exit create().
     }
 
-    if ( NULL != m_handle )
-    {
+    if ( NULL != m_handle ) {
         m_error = DATABASE_ALREADY_OPENED;
         UNSUCCESSFUL_RETURN; // Exit create().
     }
@@ -488,16 +447,14 @@ bool OSNDXFIO::create( const STRING     in_databaseName,
     U16 totalKeySize = 0;
 
     if ( !isKeyDescriptorValid(
-        in_nrOfKeys,  in_keyDescriptor, keyDescriptorSize,  totalKeySize ))
-    {
+                in_nrOfKeys,  in_keyDescriptor, keyDescriptorSize,  totalKeySize )) {
         m_error = INVALID_KEY_DESCRIPTOR;
         UNSUCCESSFUL_RETURN; // Exit create().
     }
 
     // Check database existence.
     OSFIO fileHandle;
-    if ( fileHandle.open( in_databaseName, READ_ONLY_ACCESS ))
-    {
+    if ( fileHandle.open( in_databaseName, READ_ONLY_ACCESS )) {
         m_error = DATABASE_ALREADY_EXIST;
         UNSUCCESSFUL_RETURN; // Exit create().
     }
@@ -505,8 +462,7 @@ bool OSNDXFIO::create( const STRING     in_databaseName,
     // Create database.
     bool statusOk = ( fileHandle.create( in_databaseName ));
 
-    if ( statusOk )
-    {
+    if ( statusOk ) {
         sDATA   record;
         sHEADER header;
 
@@ -527,10 +483,10 @@ bool OSNDXFIO::create( const STRING     in_databaseName,
         header.reservedIndexRecords = in_reservedIndexRecords;
         header.nrOfIndexRecords = header.reservedIndexRecords;
         header.nextFreeIndex = sizeof( record /* header id */ ) + record.size +
-            sizeof( record /* index id */ );
+                               sizeof( record /* index id */ );
         header.nextFreeData = header.nextFreeIndex + ( header.reservedIndexRecords *
-            ( sizeof( sINDEX ) + totalKeySize )) +
-            sizeof( record ); /* next index id */
+                              ( sizeof( sINDEX ) + totalKeySize )) +
+                              sizeof( record ); /* next index id */
         header.nrOfKeys = in_nrOfKeys;
         header.totalKeySize = totalKeySize;
         header.keyDescriptorSize = keyDescriptorSize;
@@ -538,29 +494,27 @@ bool OSNDXFIO::create( const STRING     in_databaseName,
         statusOk = statusOk && fileHandle.write( &record, sizeof( record ));
         statusOk = statusOk && fileHandle.write( &header, sizeof( header ));
 
-        for ( int i = 0; statusOk && ( i < in_nrOfKeys ); i++ )
-        {
+        for ( int i = 0; statusOk && ( i < in_nrOfKeys ); i++ ) {
             statusOk = statusOk && fileHandle.write(
-                &in_keyDescriptor[ i ].nrOfSegments,
-                sizeof( in_keyDescriptor[ 0 ].nrOfSegments ));
+                           &in_keyDescriptor[ i ].nrOfSegments,
+                           sizeof( in_keyDescriptor[ 0 ].nrOfSegments ));
             statusOk = statusOk && fileHandle.write(
-                in_keyDescriptor[ i ].apSegment, // Pointer to array of key segments.
-                ( in_keyDescriptor[ i ].nrOfSegments *
-                sizeof( *(in_keyDescriptor[ i ].apSegment))));
+                           in_keyDescriptor[ i ].apSegment, // Pointer to array of key segments.
+                           ( in_keyDescriptor[ i ].nrOfSegments *
+                             sizeof( *(in_keyDescriptor[ i ].apSegment))));
         }
 
         statusOk = statusOk && createReservedIndexRecords(
-            fileHandle,
-            ( sizeof( record /* header id */ ) +
-            record.size ),
-            header.reservedIndexRecords,
-            header.totalKeySize );
+                       fileHandle,
+                       ( sizeof( record /* header id */ ) +
+                         record.size ),
+                       header.reservedIndexRecords,
+                       header.totalKeySize );
     }
 
     fileHandle.close();
 
-    if ( statusOk )
-    {
+    if ( statusOk ) {
         statusOk = open( in_databaseName );
     }
 
@@ -571,29 +525,24 @@ bool OSNDXFIO::create( const STRING     in_databaseName,
 bool OSNDXFIO::close()
 /*============================================================================*/
 {
-    if ( NULL != m_handle )
-    {
-        if ( !m_handle->fileHandle.close() )
-        {
+    if ( NULL != m_handle ) {
+        if ( !m_handle->fileHandle.close() ) {
             m_error = NO_DATABASE;
         }
 
         // Update the database administration.
-        if ( NULL != m_handle->pPrevious )
-        {
+        if ( NULL != m_handle->pPrevious ) {
             (m_handle->pPrevious)->pNext = m_handle->pNext;
         }
 
-        if ( NULL != m_handle->pNext )
-        {
+        if ( NULL != m_handle->pNext ) {
             (m_handle->pNext)->pPrevious = m_handle->pPrevious;
         }
 
         // Release all allocated memory.
         ::free( m_handle->apKey );
 
-        for ( int i = 0; i < m_handle->nrOfKeys; i++ )
-        {
+        for ( int i = 0; i < m_handle->nrOfKeys; i++ ) {
             ::free( m_handle->apKeyDescriptor[ i ].apSegment );
             ::free( m_handle->apKeyIndex[ i ].apRecord );
         }
@@ -618,16 +567,14 @@ bool OSNDXFIO::rebuild( const STRING    in_databaseName,
 {
     U32 nbOfRecords = getNrOfRecords();
 
-    if ( 0 == nbOfRecords )
-    {
+    if ( 0 == nbOfRecords ) {
         m_error = EMPTY_DATABASE;
         UNSUCCESSFUL_RETURN; // Exit rebuild().
     }
 
     BYTE* pData = (BYTE*)::malloc( in_maxDataSize );
 
-    if ( NULL == pData )
-    {
+    if ( NULL == pData ) {
         m_error = MEMORY_ALLOCATION_ERROR;
         UNSUCCESSFUL_RETURN; // Exit rebuild().
     }
@@ -639,15 +586,12 @@ bool OSNDXFIO::rebuild( const STRING    in_databaseName,
     record.pData = pData;
 
     U32 index;
-    for ( index = 0; statusOk && ( index < m_handle->nrOfIndexRecords ); index++ )
-    {
+    for ( index = 0; statusOk && ( index < m_handle->nrOfIndexRecords ); index++ ) {
         sINDEX* pIndex = (sINDEX*)( m_handle->apKey + ( m_handle->totalIndexSize * index ));
-        if ( pIndex->status == eOK )
-        {
+        if ( pIndex->status == eOK ) {
             U32 temp;
 
-            if ( in_maxDataSize < pIndex->dataSize )
-            {
+            if ( in_maxDataSize < pIndex->dataSize ) {
                 in_maxDataSize       = pIndex->dataSize;
                 record.allocatedSize = in_maxDataSize;
                 record.pData         = (BYTE*)::realloc( pData, in_maxDataSize );
@@ -675,8 +619,7 @@ U16 OSNDXFIO::getNrOfKeys()
 U16 OSNDXFIO::getKeySize( U16 in_keyId )
 /*============================================================================*/
 {
-    if ( in_keyId < m_handle->nrOfKeys )
-    {
+    if ( in_keyId < m_handle->nrOfKeys ) {
         return m_handle->apKeyIndex[ in_keyId ].keySize;
     }
 
@@ -697,14 +640,12 @@ bool OSNDXFIO::createRecord( sRECORD& in_rRecord,
 {
     BYTE* pSearchKey = (BYTE*)( ::malloc( m_handle->totalKeySize ));
 
-    if ( NULL == pSearchKey )
-    {
+    if ( NULL == pSearchKey ) {
         m_error = MEMORY_ALLOCATION_ERROR;
         UNSUCCESSFUL_RETURN; // Exit createRecord().
     }
 
-    if ( !generateSearchKey( m_handle, in_rRecord, pSearchKey ))
-    {
+    if ( !generateSearchKey( m_handle, in_rRecord, pSearchKey )) {
         m_error = RECORD_TOO_SMALL;
         ::free( pSearchKey );
         UNSUCCESSFUL_RETURN; // Exit createRecord().
@@ -716,40 +657,34 @@ bool OSNDXFIO::createRecord( sRECORD& in_rRecord,
 
     sDATA   data;
     sINDEX  index;
-    sHEADER header = *m_handle; // Bitwise copy of sHEADER struct of sHANDLE!
+    sHEADER header = *m_handle;
     bool    statusOk;
 
     m_error = DATABASE_IO_ERROR;
 
-    do
-    {
+    do {
         // Read index record.
         statusOk = m_handle->fileHandle.read( indexOffset, &index, sizeof( index ));
 
-        if ( deletedRecordAvailable )
-        {
+        if ( deletedRecordAvailable ) {
             statusOk = statusOk && ( index.status >= eDELETED );
             // Read data record.
             statusOk = statusOk && m_handle->fileHandle.read( index.dataOffset,
-                                                              &data,
-                                                              sizeof( data ));
+                       &data,
+                       sizeof( data ));
             statusOk = statusOk &&  // Verify data record.
-                ( data.id == eDELETED_DATA ) &&
-                ( index.recordRef == data.recordRef );
+                       ( data.id == eDELETED_DATA ) &&
+                       ( index.recordRef == data.recordRef );
 
-            if ( statusOk )
-            {
-                if ( in_rRecord.dataSize <= data.size )
-                {   // This record is not available anymore for overwriting.
+            if ( statusOk ) {
+                if ( in_rRecord.dataSize <= data.size ) {
+                    // This record is not available anymore for overwriting.
                     deletedRecordAvailable  = false;
                     header.lastDeletedIndex = (U32)index.prevDeletedIndex;
-                }
-                else
-                {
+                } else {
                     indexOffset = index.prevDeletedIndex;
 
-                    if ( indexOffset < 0 ) // There are no more deleted records found.
-                    {
+                    if ( indexOffset < 0 ) { // There are no more deleted records found.
                         deletedRecordAvailable = false;
                         // Reread index record and check index record id.
                         statusOk = m_handle->fileHandle.read( m_handle->nextFreeIndex,
@@ -760,16 +695,12 @@ bool OSNDXFIO::createRecord( sRECORD& in_rRecord,
                     }
                 }
             }
-        }
-        else
-        {
+        } else {
             statusOk = statusOk && ( index.status == eRESERVED );
         }
-    }
-    while ( deletedRecordAvailable );
+    } while ( deletedRecordAvailable );
 
-    if (( statusOk ) && ( index.status == eRESERVED ))
-    {
+    if (( statusOk ) && ( index.status == eRESERVED )) {
         // Initialize index and data record.
         index.status     = eOK;
         index.dataOffset = m_handle->nextFreeData;
@@ -782,8 +713,7 @@ bool OSNDXFIO::createRecord( sRECORD& in_rRecord,
         data.offset      = index.dataOffset + sizeof( data ) + in_rRecord.dataSize;
     }
 
-    if ( statusOk )
-    {
+    if ( statusOk ) {
         m_error = DATABASE_IO_ERROR;
         // Write data id record.
         statusOk = m_handle->fileHandle.write( index.dataOffset, &data, sizeof( data ));
@@ -795,8 +725,7 @@ bool OSNDXFIO::createRecord( sRECORD& in_rRecord,
         statusOk = statusOk && m_handle->fileHandle.write( pSearchKey, header.totalKeySize );
     }
 
-    if ( statusOk )
-    {
+    if ( statusOk ) {
         // Set record counter and reference.
         header.nrOfRecords++;
         header.recordReference++;
@@ -806,17 +735,15 @@ bool OSNDXFIO::createRecord( sRECORD& in_rRecord,
         m_error = DATABASE_IO_ERROR;
         bool reservedIndexRecordsCreated = false;
         // Check for available index records. Reserve index records.
-        if ( header.nrOfRecords == m_handle->nrOfIndexRecords )
-        {
+        if ( header.nrOfRecords == m_handle->nrOfIndexRecords ) {
             // Write extra reserved index records.
             statusOk = createReservedIndexRecords(
-                m_handle->fileHandle,
-                header.nextFreeData,
-                m_handle->reservedIndexRecords,
-                m_handle->totalKeySize );
+                           m_handle->fileHandle,
+                           header.nextFreeData,
+                           m_handle->reservedIndexRecords,
+                           m_handle->totalKeySize );
 
-            if ( statusOk )
-            {
+            if ( statusOk ) {
                 // Set the next free index file pointer. Temporary storage.
                 header.nextFreeIndex = header.nextFreeData;
                 // Update free data file pointer from current file pointer.
@@ -837,24 +764,20 @@ bool OSNDXFIO::createRecord( sRECORD& in_rRecord,
 
                 reservedIndexRecordsCreated = true;
             }
-        }
-        else
-        {
+        } else {
             header.nextFreeIndex += ( sizeof( index ) + header.totalKeySize );
         }
 
         // Update file header.
         statusOk = statusOk && m_handle->fileHandle.write( sizeof( data ), &header,
-          sizeof( header ));
+                   sizeof( header ));
         // Bitwise copy to first field of sHEADER part of sHANDLE!
         ::memcpy(&m_handle->version, &header, sizeof( header ));
 
-        if ( statusOk && reservedIndexRecordsCreated )
-        {
+        if ( statusOk && reservedIndexRecordsCreated ) {
             m_error = MEMORY_ALLOCATION_ERROR;
             // Reinitialize apRecord and apKey array.
-            for ( U16 key = 0; statusOk && ( key < m_handle->nrOfKeys ); key++ )
-            {
+            for ( U16 key = 0; statusOk && ( key < m_handle->nrOfKeys ); key++ ) {
                 statusOk = initKeyIndexArray( m_handle, key );
             }
 
@@ -862,18 +785,16 @@ bool OSNDXFIO::createRecord( sRECORD& in_rRecord,
         }
     }
 
-    if ( statusOk )
-    {
+    if ( statusOk ) {
         U32 prevNrOfRecords = header.nrOfRecords;
         U32 indexOffset     = prevNrOfRecords * m_handle->totalIndexSize;
 
         // Update apRecord index array and apKey array in memory.
         ::memcpy(( m_handle->apKey + indexOffset), &index, sizeof( index ));
         ::memcpy(( m_handle->apKey + indexOffset + sizeof( index )),
-            pSearchKey, m_handle->totalKeySize);
+                 pSearchKey, m_handle->totalKeySize);
 
-        for ( U16 k = 0; k < m_handle->nrOfKeys; k++ )
-        {
+        for ( U16 k = 0; k < m_handle->nrOfKeys; k++ ) {
             m_handle->apKeyIndex[ k ].bSorted = false;
         }
 
@@ -909,30 +830,26 @@ bool OSNDXFIO::getRecord( U32      in_index,
     // Read data id record.
     bool statusOk = ( m_handle->fileHandle.read( pIndex->dataOffset, &data, sizeof( data )));
 
-    if ( statusOk )
-    {
+    if ( statusOk ) {
         m_error  = INDEX_CORRUPT;
         // Verify data type and record reference.
         statusOk = (( data.id >= S32( eDATA )) && ( data.recordRef == pIndex->recordRef ));
     }
 
-    if ( statusOk )
-    {
+    if ( statusOk ) {
         m_error = RECORD_TOO_LARGE;
         // Verify data allocated memory size.
         statusOk = ( data.size <= out_rRecord.allocatedSize);
     }
 
-    if ( statusOk )
-    {
+    if ( statusOk ) {
         m_error = DATABASE_IO_ERROR;
         // Read data record.
         statusOk = ( m_handle->fileHandle.read(( pIndex->dataOffset +
-            sizeof( data )), out_rRecord.pData, data.size ));
+                                               sizeof( data )), out_rRecord.pData, data.size ));
     }
 
-    if ( statusOk )
-    {
+    if ( statusOk ) {
         out_rRecord.dataOffset = pIndex->dataOffset + sizeof( data );
         out_rRecord.dataSize = data.size;
         m_error = NO_ERROR;
@@ -949,13 +866,12 @@ bool OSNDXFIO::getNextRecord( U16      in_keyId,
 {
     m_error = ENTRY_NOT_FOUND;
     bool statusOk = ( m_handle->apKeyIndex[ in_keyId ].position !=
-    m_handle->apKeyIndex[ in_keyId ].selectionEnd );
+                      m_handle->apKeyIndex[ in_keyId ].selectionEnd );
     out_rIndex = INVALID_VALUE;
 
-    if ( statusOk )
-    {
+    if ( statusOk ) {
         out_rIndex = m_handle->apKeyIndex[ in_keyId ].
-            apRecord[ m_handle->apKeyIndex[ in_keyId ].position ];
+                     apRecord[ m_handle->apKeyIndex[ in_keyId ].position ];
         m_handle->apKeyIndex[ in_keyId ].position++;
         statusOk = getRecord( out_rIndex, out_rRecord );
     }
@@ -973,13 +889,33 @@ bool OSNDXFIO::deleteRecord( U32 in_index )
 
     statusOk = statusOk && ( eOK == pIndex->status );
 
-    if ( statusOk )
-    {
+    sDATA data;
+    if ( statusOk ) {
+        m_error = DATABASE_IO_ERROR;
+        // Read data id record.
+        statusOk = ( m_handle->fileHandle.read( pIndex->dataOffset, &data, sizeof( data )));
+    }
+
+    if ( statusOk ) {
+        m_error = INDEX_CORRUPT;
+        // Verify data type and record reference.
+        statusOk = (( data.id >= S32( eDATA )) && ( data.recordRef == pIndex->recordRef ));
+    }
+
+    if ( statusOk ) {
+        m_error = DATABASE_IO_ERROR;
+        data.id = eDELETED;
+        // Write data id record.
+        statusOk = m_handle->fileHandle.write( pIndex->dataOffset, &data, sizeof( data ));
+        // Write index record.
+        statusOk = statusOk && m_handle->fileHandle.write( pIndex->offset, pIndex, sizeof( sINDEX ));
+    }
+
+    if ( statusOk ) {
+        m_error = NO_ERROR;
         pIndex->prevDeletedIndex   = m_handle->lastDeletedIndex;
         m_handle->lastDeletedIndex = in_index;
     }
-
-    // TO DO write index + data record!
 
     return statusOk;
 }
@@ -989,33 +925,69 @@ bool OSNDXFIO::updateRecord( U32      in_index,
                              sRECORD& in_rRecord )
 /*============================================================================*/
 {
-    m_error        = NO_ERROR;
+    m_error        = ENTRY_NOT_FOUND;
     sINDEX* pIndex = (sINDEX*)( m_handle->apKey + ( m_handle->totalIndexSize * in_index ));
     bool  statusOk = ( in_index < m_handle->nrOfIndexRecords );
 
     sDATA data;
-    if ( statusOk )
-    {
+    if ( statusOk ) {
         m_error = DATABASE_IO_ERROR;
         // Read data id record.
         statusOk = ( m_handle->fileHandle.read( pIndex->dataOffset, &data, sizeof( data )));
     }
 
-    if ( statusOk )
-    {
+    if ( statusOk ) {
         m_error = INDEX_CORRUPT;
         // Verify data type and record reference.
         statusOk = (( data.id >= S32( eDATA )) && ( data.recordRef == pIndex->recordRef ));
+        statusOk = statusOk && ( pIndex->dataOffset == in_rRecord.dataOffset );
     }
 
-    if ( statusOk )
-    {
+    if ( statusOk ) {
         m_error = RECORD_TOO_LARGE;
         // Verify available data size.
         statusOk = ( data.offset - ( pIndex->dataOffset + sizeof( data )) >= in_rRecord.dataSize );
     }
 
-    // TO DO write record!
+    BYTE* pSearchKey = (BYTE*)( ::malloc( m_handle->totalKeySize ));
+
+    if ( statusOk ) {
+        if ( NULL == pSearchKey ) {
+            m_error = MEMORY_ALLOCATION_ERROR;
+            UNSUCCESSFUL_RETURN; // Exit updateRecord().
+        }
+
+        if ( !generateSearchKey( m_handle, in_rRecord, pSearchKey )) {
+            m_error = RECORD_TOO_SMALL;
+            ::free( pSearchKey );
+            UNSUCCESSFUL_RETURN; // Exit updateRecord().
+        }
+        m_error = DATABASE_IO_ERROR;
+    }
+
+    sHEADER header = *m_handle;
+    // Write data.
+    statusOk = statusOk && m_handle->fileHandle.write(( in_rRecord.pData + in_rRecord.dataOffset ), in_rRecord.dataSize );
+    // Write index key.
+    statusOk = statusOk && m_handle->fileHandle.write( ( pIndex->offset + sizeof( sINDEX)), pSearchKey, header.totalKeySize );
+
+    if ( statusOk ) {
+        U32 prevNrOfRecords = header.nrOfRecords;
+        U32 indexOffset     = prevNrOfRecords * m_handle->totalIndexSize;
+
+        // Update apRecord index array and apKey array in memory.
+        ::memcpy(( m_handle->apKey + indexOffset), pIndex, sizeof( sINDEX ));
+        ::memcpy(( m_handle->apKey + indexOffset + sizeof( sINDEX )),
+                 pSearchKey, m_handle->totalKeySize);
+
+        for ( U16 k = 0; k < m_handle->nrOfKeys; k++ ) {
+            m_handle->apKeyIndex[ k ].bSorted = false;
+        }
+
+        m_error = NO_ERROR;
+    }
+
+    ::free( pSearchKey );
 
     return statusOk;
 }
@@ -1027,17 +999,14 @@ bool OSNDXFIO::existRecord( sKEY& in_rKey,
 {
     bool bResult = ( m_handle->nrOfRecords > 0 );
 
-    if ( bResult && !in_rKey.conversionDone )
-    {
+    if ( bResult && !in_rKey.conversionDone ) {
         // m_error is set by convertKey().
         bResult = convertKey( in_rKey );
     }
 
-    if ( bResult )
-    {
-        if ( !m_handle->apKeyIndex[ in_rKey.id ].bSorted )
-        {
-          shellSort( m_handle, in_rKey.id );
+    if ( bResult ) {
+        if ( !m_handle->apKeyIndex[ in_rKey.id ].bSorted ) {
+            shellSort( m_handle, in_rKey.id );
         }
 
         m_handle->apKeyIndex[ in_rKey.id ].position       = U32( INVALID_VALUE );
@@ -1045,14 +1014,12 @@ bool OSNDXFIO::existRecord( sKEY& in_rKey,
         m_handle->apKeyIndex[ in_rKey.id ].selectionEnd   = U32( INVALID_VALUE );
         out_rIndex                                        = U32( INVALID_VALUE );
 
-        if ( m_handle->nrOfRecords == 1 )
-        {
+        if ( m_handle->nrOfRecords == 1 ) {
             bResult = ( ::memcmp( in_rKey.pValue,
-                ( m_handle->apKey + m_handle->apKeyIndex[ in_rKey.id ].keyOffset ),
-                in_rKey.size ) == 0 );
+                                  ( m_handle->apKey + m_handle->apKeyIndex[ in_rKey.id ].keyOffset ),
+                                  in_rKey.size ) == 0 );
 
-            if ( bResult )
-            {
+            if ( bResult ) {
                 m_handle->apKeyIndex[ in_rKey.id ].position       = 0;
                 m_handle->apKeyIndex[ in_rKey.id ].selectionStart = 0;
                 m_handle->apKeyIndex[ in_rKey.id ].selectionEnd   = 0;
@@ -1060,9 +1027,7 @@ bool OSNDXFIO::existRecord( sKEY& in_rKey,
                 in_rKey.index                                     = 0;
                 in_rKey.count                                     = 1;
             }
-        }
-        else
-        {
+        } else {
             // Binary search.
             S32 maxIndex   = S32( m_handle->nrOfRecords - 1 );
             S32 leftIndex  = 0;
@@ -1070,46 +1035,40 @@ bool OSNDXFIO::existRecord( sKEY& in_rKey,
             U32 searchIndex;
             S32 result;
 
-            if ( in_rKey.index != U32( INVALID_VALUE ))
-            {
+            if ( in_rKey.index != U32( INVALID_VALUE )) {
                 leftIndex  = in_rKey.index;
                 rightIndex = ( in_rKey.index + in_rKey.count );
             }
 
-            do
-            {
+            do {
                 searchIndex = U32(( leftIndex + rightIndex ) >> 1 ); // Division by 2.
                 result = ::memcmp( in_rKey.pValue,
-                    ( m_handle->apKey +
-                    ( m_handle->apKeyIndex[ in_rKey.id ].apRecord[ searchIndex ] *
-                      m_handle->totalIndexSize ) +
-                      m_handle->apKeyIndex[ in_rKey.id ].keyOffset ),
-                      in_rKey.size );
+                                   ( m_handle->apKey +
+                                     ( m_handle->apKeyIndex[ in_rKey.id ].apRecord[ searchIndex ] *
+                                       m_handle->totalIndexSize ) +
+                                     m_handle->apKeyIndex[ in_rKey.id ].keyOffset ),
+                                   in_rKey.size );
 
-                if ( result < 0 )
-                {
+                if ( result < 0 ) {
                     rightIndex = searchIndex - 1;
                 }
 
-                if ( result > 0 )
-                {
+                if ( result > 0 ) {
                     leftIndex = searchIndex + 1;
                 }
 
             } while (( result != 0 ) && (leftIndex <= rightIndex));
 
-            if ( result == 0 )
-            {
+            if ( result == 0 ) {
                 leftIndex = searchIndex;
                 // Find matching keys before searchIndex.
                 while (( leftIndex > 0 ) &&
-                    ( ::memcmp( in_rKey.pValue,
-                    ( m_handle->apKey +
-                    ( m_handle->apKeyIndex[ in_rKey.id ].apRecord[ leftIndex - 1 ] *
-                      m_handle->totalIndexSize ) +
-                      m_handle->apKeyIndex[ in_rKey.id ].keyOffset ),
-                    in_rKey.size ) == 0 ))
-                {
+                        ( ::memcmp( in_rKey.pValue,
+                                    ( m_handle->apKey +
+                                      ( m_handle->apKeyIndex[ in_rKey.id ].apRecord[ leftIndex - 1 ] *
+                                        m_handle->totalIndexSize ) +
+                                      m_handle->apKeyIndex[ in_rKey.id ].keyOffset ),
+                                    in_rKey.size ) == 0 )) {
                     leftIndex--;
                 }
 
@@ -1119,14 +1078,13 @@ bool OSNDXFIO::existRecord( sKEY& in_rKey,
                 rightIndex = searchIndex;
                 // Find matching keys beyond searchIndex.
                 while (( rightIndex < maxIndex ) &&
-                    ( ::memcmp( in_rKey.pValue,
-                    ( m_handle->apKey +
-                    ( m_handle->apKeyIndex[ in_rKey.id ].apRecord[ rightIndex + 1 ] *
-                      m_handle->totalIndexSize ) +
-                      m_handle->apKeyIndex[ in_rKey.id ].keyOffset ),
-                      in_rKey.size ) == 0 ))
-                {
-                  rightIndex++;
+                        ( ::memcmp( in_rKey.pValue,
+                                    ( m_handle->apKey +
+                                      ( m_handle->apKeyIndex[ in_rKey.id ].apRecord[ rightIndex + 1 ] *
+                                        m_handle->totalIndexSize ) +
+                                      m_handle->apKeyIndex[ in_rKey.id ].keyOffset ),
+                                    in_rKey.size ) == 0 )) {
+                    rightIndex++;
                 }
 
                 m_handle->apKeyIndex[ in_rKey.id ].selectionEnd = U32( rightIndex );
@@ -1136,15 +1094,13 @@ bool OSNDXFIO::existRecord( sKEY& in_rKey,
                 in_rKey.count = U32( rightIndex - leftIndex ) + 1;
             }
 
-            if ( result < 0 )
-            {
+            if ( result < 0 ) {
                 bResult       = false;
                 m_error       = ENTRY_NOT_FOUND;
                 in_rKey.index = searchIndex; // Index for insertion.
             }
 
-            if ( result > 0 )
-            {
+            if ( result > 0 ) {
                 bResult       = false;
                 m_error       = ENTRY_NOT_FOUND;
                 in_rKey.index = searchIndex + 1; // Index for insertion.
@@ -1159,7 +1115,7 @@ bool OSNDXFIO::existRecord( sKEY& in_rKey,
 U32 OSNDXFIO::getSearchCount( sKEY& in_rKey )
 /*============================================================================*/
 {
-   return in_rKey.count;
+    return in_rKey.count;
 }
 
 
@@ -1175,21 +1131,18 @@ bool OSNDXFIO::convertKey( sKEY& in_rKey )
     bool        bResult     = ( in_rKey.size <= pKeyIndex->keySize );
     S32         keySizeLeft = in_rKey.size;
 
-    if ( bResult )
-    {
+    if ( bResult ) {
         sKEY_DESC* pKeyDescriptor = &m_handle->apKeyDescriptor[ in_rKey.id ];
         BYTE*      pKey           = in_rKey.pValue;
 
         for ( U16 j = 0; ( bResult && ( keySizeLeft > 0 ) &&
-          ( j < pKeyDescriptor->nrOfSegments )); j++ )
-        {
+                           ( j < pKeyDescriptor->nrOfSegments )); j++ ) {
             sKEY_SEGMENT* pKeySegment = &pKeyDescriptor->apSegment[ j ];
 
             bResult      = convertKeySegment( pKey, pKeySegment->type );
             keySizeLeft -= pKeySegment->size;
 
-            if (( keySizeLeft < 0 ) && ( pKeySegment->type == tBYTE ))
-            {
+            if (( keySizeLeft < 0 ) && ( pKeySegment->type == tBYTE )) {
                 keySizeLeft = 0;
             }
 
@@ -1199,12 +1152,9 @@ bool OSNDXFIO::convertKey( sKEY& in_rKey )
 
     bResult = bResult && ( keySizeLeft == 0 );
 
-    if ( bResult )
-    {
+    if ( bResult ) {
         in_rKey.conversionDone = true;
-    }
-    else
-    {
+    } else {
         m_error = INVALID_KEY;
     }
 
@@ -1229,10 +1179,10 @@ static bool isDatabaseNameValid( const STRING in_databaseName )
 
 /*============================================================================*/
 static bool isKeyDescriptorValid(
-                       U16                       in_nrOfKeys,
-                       const OSNDXFIO::sKEY_DESC in_keyDesc[],
-                       U16&                      out_keyDescSize,
-                       U16&                      out_totalKeySize )
+    U16                       in_nrOfKeys,
+    const OSNDXFIO::sKEY_DESC in_keyDesc[],
+    U16&                      out_keyDescSize,
+    U16&                      out_totalKeySize )
 /*============================================================================*/
 {
     bool bValid = true;
@@ -1240,35 +1190,32 @@ static bool isKeyDescriptorValid(
     out_keyDescSize  = 0;
     out_totalKeySize = 0;
 
-    for ( int i = 0; bValid && ( i < in_nrOfKeys ); i++ )
-    {
+    for ( int i = 0; bValid && ( i < in_nrOfKeys ); i++ ) {
         out_keyDescSize += U16( sizeof( in_keyDesc[ i ].nrOfSegments ));
 
-        for ( int j = 0; bValid && ( j < in_keyDesc[ i ].nrOfSegments ); j++ )
-        {
+        for ( int j = 0; bValid && ( j < in_keyDesc[ i ].nrOfSegments ); j++ ) {
             U16 segmentSize = in_keyDesc[ i ].apSegment[ j ].size;
 
             // Check given type with size.
-            switch ( in_keyDesc[ i ].apSegment[ j ].type )
-            {
+            switch ( in_keyDesc[ i ].apSegment[ j ].type ) {
             case OSNDXFIO::tBYTE:
-              bValid = ( segmentSize > 0 );
-              break;
+                bValid = ( segmentSize > 0 );
+                break;
             case OSNDXFIO::tS16:
-              bValid = ( segmentSize == sizeof( S16 ));
-              break;
+                bValid = ( segmentSize == sizeof( S16 ));
+                break;
             case OSNDXFIO::tU16:
-              bValid = ( segmentSize == sizeof( U16 ));
-              break;
+                bValid = ( segmentSize == sizeof( U16 ));
+                break;
             case OSNDXFIO::tS32:
-              bValid = ( segmentSize == sizeof( S32 ));
-              break;
+                bValid = ( segmentSize == sizeof( S32 ));
+                break;
             case OSNDXFIO::tU32:
-              bValid = ( segmentSize == sizeof( U32 ));
-              break;
+                bValid = ( segmentSize == sizeof( U32 ));
+                break;
             default:
-              bValid = false;
-              break;
+                bValid = false;
+                break;
             }
 
             int startKey = in_keyDesc[ i ].apSegment[ j ].offset;
@@ -1279,10 +1226,8 @@ static bool isKeyDescriptorValid(
 
             stopKey += startKey;
 
-            for ( int k = 0; bValid && ( k < in_keyDesc[ i ].nrOfSegments ); k++ )
-            {
-                if ( j != k )
-                {
+            for ( int k = 0; bValid && ( k < in_keyDesc[ i ].nrOfSegments ); k++ ) {
+                if ( j != k ) {
                     int startKeyCheck = in_keyDesc[ i ].apSegment[ k ].offset;;
                     int stopKeyCheck  = in_keyDesc[ i ].apSegment[ k ].size - 1;
 
@@ -1299,8 +1244,8 @@ static bool isKeyDescriptorValid(
         }
     }
 
-    if ( !bValid )
-    { // Reset.
+    if ( !bValid ) {
+        // Reset.
         out_keyDescSize  = 0;
         out_totalKeySize = 0;
     }
@@ -1313,24 +1258,20 @@ static bool initKeyIndexArray( OSNDXFIO::sHANDLE* pHandle,
                                U16                key )
 /*============================================================================*/
 {
-    if ( pHandle->allocatedIndexKeys < pHandle->nrOfIndexRecords )
-        {
+    if ( pHandle->allocatedIndexKeys < pHandle->nrOfIndexRecords ) {
         UNSUCCESSFUL_RETURN; // Exit initKeyIndexArray().
-        }
+    }
 
-    if ( NULL == pHandle->apKeyIndex[ key ].apRecord )
-            {
+    if ( NULL == pHandle->apKeyIndex[ key ].apRecord ) {
         pHandle->apKeyIndex[ key ].apRecord = (U32*)::malloc( pHandle->allocatedIndexKeys * sizeof( U32 ));
     }
     // Check if memory allocation was successful.
     bool statusOk = pHandle->apKeyIndex[ key ].apRecord != NULL;
 
-    if ( statusOk )
-    {
+    if ( statusOk ) {
         U32 i = pHandle->apKeyIndex[ key ].recordCount;
-         // Initialize memory.
-        for ( ; i < pHandle->nrOfIndexRecords; i++ )
-        {
+        // Initialize memory.
+        for ( ; i < pHandle->nrOfIndexRecords; i++ ) {
             pHandle->apKeyIndex[ key ].apRecord[ i ] = i;
         }
 
@@ -1350,21 +1291,15 @@ static bool initKeyArray( OSNDXFIO::sHANDLE* pHandle )
     U64 prevApKeySize = pHandle->nrOfRecords * totalIndexSize;
     U64 newApKeySize = pHandle->nrOfIndexRecords * totalIndexSize;
 
-    if ( NULL == pHandle->apKey )
-    {
-        if ( apKeySize < MAX_MALLOC )
-        {
+    if ( NULL == pHandle->apKey ) {
+        if ( apKeySize < MAX_MALLOC ) {
             pHandle->apKey = (BYTE*)::malloc( (U32)apKeySize );
         }
-    }
-    else if ( newApKeySize > apKeySize )
-    {
-        if ( newApKeySize < MAX_MALLOC )
-        {
+    } else if ( newApKeySize > apKeySize ) {
+        if ( newApKeySize < MAX_MALLOC ) {
             BYTE* apKeyNew = (BYTE*)::realloc( pHandle->apKey, (U32)newApKeySize );
 
-            if (( apKeyNew != NULL ) && ( apKeyNew != pHandle->apKey ))
-            {
+            if (( apKeyNew != NULL ) && ( apKeyNew != pHandle->apKey )) {
                 ::free( pHandle->apKey );
                 pHandle->apKey = apKeyNew;
             }
@@ -1375,10 +1310,8 @@ static bool initKeyArray( OSNDXFIO::sHANDLE* pHandle )
     // Check if memory allocation was successful.
     bool statusOk = pHandle->apKey != NULL;
 
-    if ( statusOk )
-    {
-        if ( newApKeySize > prevApKeySize )
-        {
+    if ( statusOk ) {
+        if ( newApKeySize > prevApKeySize ) {
             ::memset(( pHandle->apKey + prevApKeySize ), INVALID_VALUE, ( newApKeySize - prevApKeySize ));
         }
     }
@@ -1399,8 +1332,7 @@ static bool createReservedIndexRecords( OSFIO& handle,
     U32   indexOffset    = filePointer + sizeof( record /* index id */);
     U32   totalIndexSize = sizeof( sINDEX ) + totalKeySize;
 
-    if ( statusOk )
-    {
+    if ( statusOk ) {
         ::memset( pKey, 0, totalKeySize ); // Initialize search key.
 
         record.id     = eINDEX;
@@ -1410,12 +1342,11 @@ static bool createReservedIndexRecords( OSFIO& handle,
 
     // Write data record with index id.
     statusOk = statusOk && handle.write( filePointer,
-                                       &record,
-                                       sizeof( record ));
+                                         &record,
+                                         sizeof( record ));
     sINDEX index;
 
-    for ( U16 j = 0; statusOk && ( j < reservedIndexRecords ); j++ )
-    {
+    for ( U16 j = 0; statusOk && ( j < reservedIndexRecords ); j++ ) {
         index.offset = indexOffset; // Write the index record.
         statusOk     = statusOk && handle.write(&index, sizeof( index ));
         statusOk     = statusOk && handle.write( pKey, totalKeySize );
@@ -1448,18 +1379,13 @@ static void shellSort( OSNDXFIO::sHANDLE* const pHandle,
     /* unknown. Knuth's recommendation to compute the inc(k) is:    */
     /* inc(1) = 1; inc(k+1) = 3*inc(k)+1; stop if inc(k+2) >= nelem */
     /*--------------------------------------------------------------*/
-    if ( nrOfRecords <= 13 )
-    {
+    if ( nrOfRecords <= 13 ) {
         incrementalGap = 1; // Straight insertion sort.
-    }
-    else
-    {
-        do
-        {
+    } else {
+        do {
             incrementalGap *= 3; // No check for potential overflow!
             incrementalGap += 1;
-        }
-        while ( incrementalGap < nrOfRecords );
+        } while ( incrementalGap < nrOfRecords );
 
         incrementalGap /= 3;
         incrementalGap /= 3;
@@ -1472,10 +1398,8 @@ static void shellSort( OSNDXFIO::sHANDLE* const pHandle,
     /* Perform (diminishing increment) Shell Sort. Skip the inner   */
     /* inner loop and redundant swap if elem_i is already sorted.   */
     /*--------------------------------------------------------------*/
-    do
-    {
-        for ( U32 i = incrementalGap; i < nrOfRecords; i++ )
-        {
+    do {
+        for ( U32 i = incrementalGap; i < nrOfRecords; i++ ) {
             U32  keyOffset      = pHandle->apKeyIndex[ in_keyId ].keyOffset;
             U32  keySize        = pHandle->apKeyIndex[ in_keyId ].keySize;
             U32  j = i;
@@ -1484,12 +1408,10 @@ static void shellSort( OSNDXFIO::sHANDLE* const pHandle,
             U32* pIndexJ        = &pHandle->apKeyIndex[ in_keyId ].apRecord[ j ];
 
             if ( ::memcmp(( apKey + ( indexJMinusInc * totalIndexSize ) + keyOffset ),
-            ( apKey + ( indexI * totalIndexSize ) + keyOffset ),
-            keySize ) > 0 )
-            {
+                          ( apKey + ( indexI * totalIndexSize ) + keyOffset ),
+                          keySize ) > 0 ) {
                 bool bMinusInc;
-                do
-                {
+                do {
                     *pIndexJ = indexJMinusInc;
 
                     j -= incrementalGap;
@@ -1497,15 +1419,13 @@ static void shellSort( OSNDXFIO::sHANDLE* const pHandle,
                     bMinusInc = ( j >= incrementalGap );
                     pIndexJ = &pHandle->apKeyIndex[ in_keyId ].apRecord[ j ];
 
-                    if ( bMinusInc )
-                    {
+                    if ( bMinusInc ) {
                         indexJMinusInc = pHandle->apKeyIndex[ in_keyId ].apRecord[ j - incrementalGap ];
                     }
-                }
-                while ( bMinusInc &&
-                  ( ::memcmp(( apKey + ( indexJMinusInc * totalIndexSize ) + keyOffset ),
-                    ( apKey + ( indexI * totalIndexSize ) + keyOffset ),
-                    keySize ) > 0 ));
+                } while ( bMinusInc &&
+                          ( ::memcmp(( apKey + ( indexJMinusInc * totalIndexSize ) + keyOffset ),
+                                     ( apKey + ( indexI * totalIndexSize ) + keyOffset ),
+                                     keySize ) > 0 ));
 
                 *pIndexJ = indexI;
             }
@@ -1526,27 +1446,24 @@ static bool generateSearchKey( const OSNDXFIO::sHANDLE* pHandle,
 {
     bool bResult = true;
 
-    for ( U16 i = 0; bResult && ( i < pHandle->nrOfKeys ); i++ )
-    {
+    for ( U16 i = 0; bResult && ( i < pHandle->nrOfKeys ); i++ ) {
         OSNDXFIO::sKEY_DESC* pKeyDescriptor = &pHandle->apKeyDescriptor[ i ];
 
-        for ( U16 j = 0; bResult && ( j < pKeyDescriptor->nrOfSegments ); j++ )
-        {
+        for ( U16 j = 0; bResult && ( j < pKeyDescriptor->nrOfSegments ); j++ ) {
             OSNDXFIO::sKEY_SEGMENT* pKeySegment = &pKeyDescriptor->apSegment[ j ];
 
             bResult = (( U32(pKeySegment->offset) + U32(pKeySegment->size)) <=
-                ( in_rRecord.dataOffset + in_rRecord.dataSize ));
+                       ( in_rRecord.dataOffset + in_rRecord.dataSize ));
 
-            if ( bResult )
-            { // Copy the search key segment.
+            if ( bResult ) {
+                // Copy the search key segment.
                 ::memcpy( out_pSearchKey, ( in_rRecord.pData + pKeySegment->offset ),
-                    pKeySegment->size );
+                          pKeySegment->size );
 
                 bResult = convertKeySegment( out_pSearchKey, pKeySegment->type );
             }
 
-            if ( bResult )
-            {
+            if ( bResult ) {
                 out_pSearchKey += pKeySegment->size;
             }
         }
@@ -1564,36 +1481,35 @@ static bool convertKeySegment( BYTE* pKeySegment,
     U16* pU16;
     U32* pU32;
 
-    switch ( (OSNDXFIO::eTYPE)in_keySegmentType )
-    {
+    switch ( (OSNDXFIO::eTYPE)in_keySegmentType ) {
     case OSNDXFIO::tBYTE:
         // tBYTE, do nothing.
         break;
     case OSNDXFIO::tS16:
         pU16 = (U16*)pKeySegment;
         *pU16 += U16(0x8000);     // Signed correction.
-        #ifndef CPU_BIG_ENDIAN    // Default CPU_LITTLE_ENDIAN!
+#ifndef CPU_BIG_ENDIAN    // Default CPU_LITTLE_ENDIAN!
         swap( pU16 );
-        #endif
+#endif
         break;
     case OSNDXFIO::tU16:
         pU16 = (U16*)pKeySegment;
-        #ifndef CPU_BIG_ENDIAN    // Default CPU_LITTLE_ENDIAN!
+#ifndef CPU_BIG_ENDIAN    // Default CPU_LITTLE_ENDIAN!
         swap( pU16 );
-        #endif
+#endif
         break;
     case OSNDXFIO::tS32:
         pU32 = (U32*)pKeySegment;
         *pU32 += U32(0x80000000); // Signed correction.
-        #ifndef CPU_BIG_ENDIAN    // Default CPU_LITTLE_ENDIAN!
+#ifndef CPU_BIG_ENDIAN    // Default CPU_LITTLE_ENDIAN!
         swap( pU32 );
-        #endif
+#endif
         break;
     case OSNDXFIO::tU32:
         pU32 = (U32*)pKeySegment;
-        #ifndef CPU_BIG_ENDIAN    // Default CPU_LITTLE_ENDIAN!
+#ifndef CPU_BIG_ENDIAN    // Default CPU_LITTLE_ENDIAN!
         swap( pU32 );
-        #endif
+#endif
         break;
     default:
         bResult = false;
@@ -1623,4 +1539,3 @@ static void swap( U32* pU32 )
     ::memcpy(( (BYTE*)pU32 + 1 ), ( (BYTE*)pU32 + 2 ), 1 );
     ::memcpy(( (BYTE*)pU32 + 2 ), &copy, 1 );
 }
-

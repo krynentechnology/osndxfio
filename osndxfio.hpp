@@ -45,12 +45,10 @@
 // ---- include files ----
 #include <osdef.h>
 
-class OSNDXFIO
-{
+class OSNDXFIO {
 public:
 // Error codes.
-enum eERROR
-{
+enum eERROR {
     DATABASE_ALREADY_EXIST,
     DATABASE_ALREADY_OPENED,
     DATABASE_IO_ERROR,
@@ -74,9 +72,8 @@ enum eERROR
 };
 
 /** Type definitions used for building index keys. Do not modify or erase
-  regarding backward compatibility! */
-enum eTYPE
-{
+    regarding backward compatibility! */
+enum eTYPE {
     tBYTE = 1,
     tS16  = 2,
     tU16  = 3,
@@ -84,8 +81,7 @@ enum eTYPE
     tU32  = 5
 };
 
-enum
-{
+enum {
     MINIMUM_RESERVED_INDEX_RECORDS = 10,    // Minimum and maximum values are checked,
     DEFAULT_RESERVED_INDEX_RECORDS = 100,   // optimum depends on application
     MAXIMUM_RESERVED_INDEX_RECORDS = 10000, // U16 in_reservedIndexRecords
@@ -113,111 +109,100 @@ enum
 *  machine running is a LITTLE or BIG ENDIAN machine. Default a little endian
 *  machine is expected, #define CPU_BIG_ENDIAN for a big endian machine.
 */
-struct sKEY_SEGMENT
-{
+struct sKEY_SEGMENT {
     U16  offset; // The offset of key segment.
     BYTE type;   // The type of the key segment, required for key matching.
     BYTE size;   // The size of key segment.
 
     sKEY_SEGMENT() // Constructor.
-    :
+        :
         offset( U16( INVALID_VALUE )),
         type( BYTE( tBYTE )),
-        size( 0 )
-    {
+        size( 0 ) {
     }
 
     sKEY_SEGMENT( U16 in_offset, // Constructor.
                   eTYPE in_type,
                   U16 in_size )
-    :
+        :
         offset( in_offset ),
         type( BYTE( in_type )),
-        size( in_size )
-    {
+        size( in_size ) {
     }
 };
 
 /** Application key descriptor structure. */
-struct sKEY_DESC
-{
+struct sKEY_DESC {
     U16           nrOfSegments;
     sKEY_SEGMENT* apSegment; // Pointer to array of key segments.
 };
 
 /** Application key structure. */
-struct sKEY
-{
+struct sKEY {
     friend class OSNDXFIO;
 
     U16   id;      // The search key index.
     U16   size;    // Length of search key.
     BYTE* pValue;  // The search key.
 
-    sKEY()         // Constructor.
-    :
+    sKEY() // Constructor.
+        :
         id( U16( INVALID_VALUE )),
         size( 0 ),
         pValue( NULL ),
         conversionDone( false ),
         index( U32( INVALID_VALUE )),
-        count( 0 )
-    {
+        count( 0 ) {
     }
-                   // Constructor.
-    sKEY( U16   in_id,
+
+    sKEY( U16   in_id, // Constructor.
           U16   in_size,
           BYTE* in_pValue )
-    :
+        :
         id( in_id ),
         size( in_size ),
         pValue( in_pValue ),
         conversionDone( false ),
         index( U32( INVALID_VALUE )),
-        count( 0 )
-    {
+        count( 0 ) {
     }
 
     private:
     bool conversionDone;
-                   // Conversion key required for signed key segment types and
-                   // little endian numbers. Default false. Set true by
-                   // convertKey().
-    U32  index;    // Key index identification of the first record found. Set by
-                   // getRecord() and existRecord(). This index is internally
-                   // used and not the same index as retrieved by existRecord().
-    U32  count;    // Number of records found matching the search key. Set by
-                   // getRecord() and existRecord().
+                // Conversion key required for signed key segment types and
+                // little endian numbers. Default false. Set true by
+                // convertKey().
+    U32  index; // Key index identification of the first record found. Set by
+                // getRecord() and existRecord(). This index is internally
+                // used and not the same index as retrieved by existRecord().
+    U32  count; // Number of records found matching the search key. Set by
+                // getRecord() and existRecord().
 };
 
 /** Application object structure. */
-struct sRECORD
-{
-    U32   allocatedSize;  // Allocated size.
-    U32   dataOffset;     // The offset from where the actual data is stored.
-    U32   dataSize;       // Actual size.
-    BYTE* pData;          // Points to actual data.
+struct sRECORD {
+    U32   allocatedSize; // Allocated size.
+    U32   dataOffset;    // The offset from where the actual data is stored.
+    U32   dataSize;      // Actual size.
+    BYTE* pData;         // Points to actual data.
 
-
-    sRECORD()             // Constructor.
-    :
+    sRECORD() // Constructor.
+        :
         allocatedSize( 0 ),
         dataOffset( 0 ),
         dataSize( 0 ),
-        pData( NULL )
-    {
+        pData( NULL ) {
     }
 
     sRECORD( U32   in_allocatedSize, // Constructor.
              U32   in_dataOffset,
              U32   in_dataSize,
              BYTE* in_pData )
-    :
+        :
         allocatedSize( in_allocatedSize ),
         dataOffset( in_dataOffset ),
         dataSize( in_dataSize ),
-        pData( in_pData )
-    {
+        pData( in_pData ) {
     }
 };
 
@@ -239,8 +224,8 @@ OSNDXFIO();  // Constructor.
 *  @post   OSNDXFIO operations can be performed on the database if successful.
 */
 bool open( const STRING in_databaseName,
-             bool         in_readOnly = false,
-             U32          in_allocatedIndexKeys = DEFAULT_ALLOCATED_INDEX_KEYS );
+           bool         in_readOnly = false,
+           U32          in_allocatedIndexKeys = DEFAULT_ALLOCATED_INDEX_KEYS );
 
 /**
 *  Creates and opens a new indexed database.
@@ -468,4 +453,3 @@ OSNDXFIO( const OSNDXFIO& );
 OSNDXFIO& operator=( OSNDXFIO& );
 };
 #endif // OSNDXFIO_HPP
-

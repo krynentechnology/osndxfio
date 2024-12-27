@@ -30,8 +30,7 @@
 #define READ_WRITE_ACCESS false
 #define EOF_POSITION      U32(-1)
 
-class OSFIO
-{
+class OSFIO {
 public:
 
 OSFIO();
@@ -67,14 +66,6 @@ bool create( const STRING in_fileName );
 bool close();
 
 /**
-*  Deletes an existing file even if it is read-only.
-*
-*  @param    in_fileName   File name of the file.
-*  @return   true if successful.
-*/
-static bool erase( const STRING in_fileName );
-
-/**
 *  Writes data to an opened or created file.
 *
 *  @pre      Valid handle by open() or create().
@@ -90,7 +81,7 @@ bool write( const POINTER in_dataPtr,
 *
 *  @pre      Valid handle by open() or create().
 *  @param    in_position   The byte offset from the beginning of the file.
-*                        If EOF_POSITION the data is appended.
+*                          If EOF_POSITION the data is appended.
 *  @param    in_dataPtr    The pointer to data.
 *  @param    in_dataSize   The number of bytes transfered. Default 1 byte.
 *  @return   true if successful.
@@ -165,8 +156,15 @@ bool truncate( U32 in_position );
 */
 U32 timestamp();
 
+/**
+*  Deletes an existing file even if it is read-only.
+*
+*  @param    in_fileName   File name of the file.
+*  @return   true if successful.
+*/
+static bool erase( const STRING in_fileName );
+
 private:
 int m_handle;
 };
 #endif  // OSFIO_HPP
-
