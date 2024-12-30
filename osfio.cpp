@@ -17,7 +17,7 @@
  *  License: LGPL, v3, as defined and found on www.gnu.org,
  *           https://www.gnu.org/licenses/lgpl-3.0.html
  *
- *  Description: File I/O
+ *  Description: File I/O (POSIX)
  */
 
 // ---- include files ----
@@ -55,7 +55,9 @@ bool OSFIO::open( const STRING in_fileName,
         return false;
     }
 
-    m_handle = ::open( in_fileName, (( in_readOnly ? O_RDONLY : O_RDWR ) | O_BINARY ));
+    m_handle = ::open( in_fileName,
+        (( in_readOnly ? O_RDONLY : O_RDWR ) | O_BINARY ),
+        ( in_readOnly ? S_IREAD : ( S_IREAD | S_IWRITE )));
 
     return ( m_handle != ERROR );
 }
@@ -86,7 +88,7 @@ bool OSFIO::close()
         return false;
     }
 
-    bool status_ok = ( ::close( int( m_handle )) != ERROR );
+    bool status_ok = ( ::close( m_handle ) != ERROR );
 
     m_handle = ERROR;
 
@@ -102,7 +104,7 @@ bool OSFIO::write( const POINTER in_dataPtr,
         return false;
     }
 
-    return ( ::write( int( m_handle ), in_dataPtr, in_dataSize ) != ERROR );
+    return ( ::write( m_handle, in_dataPtr, in_dataSize ) != ERROR );
 }
 
 /*============================================================================*/
@@ -117,10 +119,10 @@ bool OSFIO::write( U32           in_position,
 
     bool eof_position = ( in_position == EOF_POSITION );
 
-    return (( ::lseek( int( m_handle ),
+    return (( ::lseek( m_handle,
                        ( eof_position ? 0 : in_position ),
                        ( eof_position ? SEEK_END : SEEK_SET )) != ERROR ) &&
-            ( ::write( int( m_handle ), in_dataPtr, in_dataSize ) != ERROR ));
+            ( ::write( m_handle, in_dataPtr, in_dataSize ) != ERROR ));
 }
 
 /*============================================================================*/
@@ -132,7 +134,7 @@ bool OSFIO::read( POINTER out_dataPtr,
         return false;
     }
 
-    return ( (U32)::read( int( m_handle ), out_dataPtr, in_dataSize ) == in_dataSize );
+    return ( (U32)::read( m_handle, out_dataPtr, in_dataSize ) == in_dataSize );
 }
 
 /*============================================================================*/
@@ -145,8 +147,8 @@ bool OSFIO::read( U32     in_position,
         return false;
     }
 
-    return (( ::lseek( int( m_handle ), in_position, SEEK_SET ) != ERROR ) &&
-            ( (U32)::read( int( m_handle ), out_dataPtr, in_dataSize ) ==
+    return (( ::lseek( m_handle, in_position, SEEK_SET ) != ERROR ) &&
+            ( (U32)::read( m_handle, out_dataPtr, in_dataSize ) ==
               in_dataSize ));
 }
 
@@ -158,21 +160,21 @@ bool OSFIO::eof()
         return false;
     }
 
-    return ( ::eof( int( m_handle ) ) == 1 );
+    return ( ::eof( m_handle ) == 1 );
 }
 
 /*============================================================================*/
 U32 OSFIO::size()
 /*============================================================================*/
 {
-    return (U32)::filelength( int( m_handle ));
+    return (U32)::filelength( m_handle );
 }
 
 /*============================================================================*/
 U32 OSFIO::position()
 /*============================================================================*/
 {
-    return (U32)::tell( int( m_handle ));
+    return (U32)::tell( m_handle );
 }
 
 /*============================================================================*/
@@ -188,9 +190,9 @@ bool OSFIO::truncate( U32 in_position )
 
     if ( status_ok ) {
         status_ok = ( in_position < fileSize );
-        status_ok = status_ok && ( ::chsize( int( m_handle ), in_position ) != ERROR );
+        status_ok = status_ok && ( ::chsize( m_handle, in_position ) != ERROR );
         // set file pointer correct
-        status_ok = status_ok && ( ::lseek( int( m_handle ), 0, SEEK_END ) != ERROR );
+        status_ok = status_ok && ( ::lseek( m_handle, 0, SEEK_END ) != ERROR );
     }
 
     return status_ok;
@@ -202,7 +204,7 @@ U32 OSFIO::timestamp()
 {
     struct stat statBuffer;
 
-    if ( ::fstat( int( m_handle ), &statBuffer ) == 0 ) {
+    if ( ::fstat( m_handle, &statBuffer ) == 0 ) {
         return (U32)statBuffer.st_mtime;
     }
 
