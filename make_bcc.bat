@@ -2,14 +2,12 @@ echo off
 :: make file for Borland C++ compiler
 if not defined BCC55 (
   set BCC55=%1
-  set ADD_BCC55_PATH=Y
+  set PATH=%PATH%;%1\bin
 )
 if not defined BCC55 (
   echo Run batch file with path to Borland C++ compiler installed directory
   goto :END
 )
-if %ADD_BCC55_PATH%==Y set PATH=%PATH%;%BCC55%\bin
-set ADD_BCC55_PATH=N
 if exist .\bin rmdir /Q/S bin
 if not exist .\bin mkdir bin
 cd .\bin
