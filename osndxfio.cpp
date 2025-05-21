@@ -864,17 +864,9 @@ bool OSNDXFIO::getNextRecord( U16      in_keyId,
                               U32&     out_rIndex )
 /*============================================================================*/
 {
-    m_error = ENTRY_NOT_FOUND;
-    bool statusOk = ( m_handle->apKeyIndex[ in_keyId ].position !=
-                      m_handle->apKeyIndex[ in_keyId ].selectionEnd );
-    out_rIndex = INVALID_VALUE;
+    bool statusOk = getNextIndex( in_keyId, out_rIndex );
 
-    if ( statusOk ) {
-        out_rIndex = m_handle->apKeyIndex[ in_keyId ].
-                     apRecord[ m_handle->apKeyIndex[ in_keyId ].position ];
-        m_handle->apKeyIndex[ in_keyId ].position++;
-        statusOk = getRecord( out_rIndex, out_rRecord );
-    }
+    statusOk = statusOk && getRecord( out_rIndex, out_rRecord );
 
     return statusOk;
 }
@@ -1118,6 +1110,24 @@ U32 OSNDXFIO::getSearchCount( sKEY& in_rKey )
     return in_rKey.count;
 }
 
+/*============================================================================*/
+bool OSNDXFIO::getNextIndex( U16  in_keyId,
+                             U32& out_rIndex )
+/*============================================================================*/
+{
+    m_error = ENTRY_NOT_FOUND;
+    bool statusOk = ( m_handle->apKeyIndex[ in_keyId ].position !=
+                      m_handle->apKeyIndex[ in_keyId ].selectionEnd );
+    out_rIndex = INVALID_VALUE;
+
+    if ( statusOk ) {
+        out_rIndex = m_handle->apKeyIndex[ in_keyId ].
+                     apRecord[ m_handle->apKeyIndex[ in_keyId ].position ];
+        m_handle->apKeyIndex[ in_keyId ].position++;
+    }
+
+    return statusOk;
+}
 
 /*============================================================================*/
 bool OSNDXFIO::convertKey( sKEY& in_rKey )
