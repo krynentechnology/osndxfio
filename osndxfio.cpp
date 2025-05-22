@@ -1116,14 +1116,15 @@ bool OSNDXFIO::getNextIndex( U16  in_keyId,
 /*============================================================================*/
 {
     m_error = ENTRY_NOT_FOUND;
-    bool statusOk = ( m_handle->apKeyIndex[ in_keyId ].position !=
-                      m_handle->apKeyIndex[ in_keyId ].selectionEnd );
+
+    U32 currentPosition = m_handle->apKeyIndex[ in_keyId ].position;
+    bool statusOk = ( currentPosition != m_handle->apKeyIndex[ in_keyId ].selectionEnd );
     out_rIndex = INVALID_VALUE;
 
     if ( statusOk ) {
-        out_rIndex = m_handle->apKeyIndex[ in_keyId ].
-                     apRecord[ m_handle->apKeyIndex[ in_keyId ].position ];
-        m_handle->apKeyIndex[ in_keyId ].position++;
+        currentPosition++;
+        out_rIndex = m_handle->apKeyIndex[ in_keyId ].apRecord[ currentPosition ];
+        m_handle->apKeyIndex[ in_keyId ].position = currentPosition;
     }
 
     return statusOk;
