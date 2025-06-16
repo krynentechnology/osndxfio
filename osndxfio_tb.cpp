@@ -75,7 +75,7 @@ static OSNDXFIO::sKEY_SEGMENT key3[ 2 ] = {
     OSNDXFIO::sKEY_SEGMENT( 0, OSNDXFIO::tU32, sizeof( U32 ))
 };
 
-static STRING database1 = "testDb1.dat";
+static const STRING database1 = "testDb1.dat";
 
 static U32 passedCounter = 0;
 static U32 failedCounter = 0;
