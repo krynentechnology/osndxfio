@@ -9,7 +9,7 @@ CXXINCS  = -I"%DEVCPP%/TDM-GCC-64/include" -I"%DEVCPP%/TDM-GCC-64/x86_64-w64-min
 BIN      = bin/osndxfio_tb.exe
 CXXFLAGS = $(CXXINCS) -m32 -g3
 CFLAGS   = $(INCS) -m32 -g3
-DEL      = C:\Development\devcpp\devcpp.exe INTERNAL_DEL
+DEL      = "%DEVCPP%\devcpp.exe" INTERNAL_DEL
 
 .PHONY: all all-before all-after clean clean-custom
 
