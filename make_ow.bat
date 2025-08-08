@@ -1,8 +1,10 @@
 echo off
 :: make file for Open Watcom C++ compiler
-if not defined WATCOM (
-  set WATCOM=%1
-  set PATH=%PATH%;%1\binnt;%1\binw
+if not "%1"=="" (
+  if not defined WATCOM (
+    set WATCOM=%1
+    set PATH=%PATH%;%1\binnt;%1\binw
+  )
 )
 if not defined WATCOM (
   echo Run batch file with path to Open Watcom C++ compiler installed directory

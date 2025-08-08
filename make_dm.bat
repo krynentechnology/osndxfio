@@ -1,8 +1,10 @@
 echo off
 :: make file for Digital Mars C++ compiler
-if not defined DM857 (
-  set DM857=%1
-  set PATH=%PATH%;%1\bin
+if not "%1"=="" (
+  if not defined DM857 (
+    set DM857=%1
+    set PATH=%PATH%;%1\bin
+  )
 )
 if not defined DM857 (
   echo Run batch file with path to Digital Mars C++ compiler installed directory
