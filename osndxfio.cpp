@@ -658,6 +658,7 @@ bool OSNDXFIO::createRecord( sRECORD& in_rRecord,
     sDATA   data;
     sINDEX  index;
     sHEADER header = *m_handle;
+    U32     prevNrOfRecords = header.nrOfRecords;
     bool    statusOk;
 
     m_error = DATABASE_IO_ERROR;
@@ -786,8 +787,7 @@ bool OSNDXFIO::createRecord( sRECORD& in_rRecord,
     }
 
     if ( statusOk ) {
-        U32 prevNrOfRecords = header.nrOfRecords;
-        U32 indexOffset     = prevNrOfRecords * m_handle->totalIndexSize;
+        U32 indexOffset = prevNrOfRecords * m_handle->totalIndexSize;
 
         // Update apRecord index array and apKey array in memory.
         ::memcpy(( m_handle->apKey + indexOffset), &index, sizeof( index ));

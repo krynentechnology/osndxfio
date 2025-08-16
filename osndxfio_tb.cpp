@@ -205,8 +205,14 @@ bool test2( void )
         getNextObject( testObject );
         testObjects[ i ] = testObject;
 
-        U32 index = 0;
+        U32 index = INVALID;
         statusOk = testDb.createRecord( testRecord, index );
+
+        if ( 0 == i ) { // Check first record!
+            U32 index = INVALID;
+            OSNDXFIO::sKEY key( 0, SIZE_OF_DEPARTMENT, (BYTE*)&testObjects[ i ].department ); // 0 == key1.
+            statusOk = statusOk && testDb.existRecord( key, index ) && ( 0 == index );
+        }    
     }
 
     statusOk = statusOk && ( testDb.getNrOfRecords() == maxRecords );
