@@ -1,7 +1,7 @@
 #ifndef OSNDXFIO_HPP
 #define OSNDXFIO_HPP
 /**
- *  Copyright (C) 2024, Kees Krijnen.
+ *  Copyright (C) 2024, 2025, Kees Krijnen.
  *
  *  This program is free software: you can redistribute it and/or modify it
  *  under the terms of the GNU Lesser General Public License as published by the
@@ -319,11 +319,15 @@ bool createRecord( sRECORD& in_rRecord,
 *                        Struct field out_rRecord.dataSize returns actual
 *                        size and should be equal or less than struct
 *                        field out_rRecord.allocatedSize.
+*  @param  in_startIndex Start search from this record index.
+*  @param  in_endIndex   End search record index.
 *  @return True if successful. On false error could be retrieved with
 *          getLastError().
 */
 bool getRecord( sKEY&    in_rKey,
-                sRECORD& out_rRecord );
+                sRECORD& out_rRecord,
+                U32      in_startIndex = 0,
+                U32      in_endIndex = 0 );
 
 /**
 *  Retrieves a index based data record.
@@ -390,11 +394,15 @@ bool updateRecord( U32      in_index,
 *                        matching the (partial) key is returned. Use
 *                        getNextIndex() to retrieve the rest.
 *  @param  out_rIndex    Index identification of the first found record.
+*  @param  in_startIndex Start search from this record index.
+*  @param  in_endIndex   End search record index.
 *  @return True if successful. On false error could be retrieved with
 *          getLastError() == ENTRY_NOT_FOUND.
 */
 bool existRecord( sKEY& in_rKey,
-                  U32&  out_rIndex );
+                  U32&  out_rIndex,
+                  U32   in_startIndex = 0,
+                  U32   in_endIndex = 0 );
 
 /**
 *  Gets search key count after getRecord() or existRecord().

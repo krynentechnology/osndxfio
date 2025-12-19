@@ -1,6 +1,6 @@
 echo off
 :: make file for Digital Mars C++ compiler
-if not "%1"=="" (
+if not [%1]==[] (
   if not defined DM857 (
     set DM857=%1
     set PATH=%PATH%;%1\bin

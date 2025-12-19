@@ -1,6 +1,6 @@
 echo off
 :: make file for DEVCPP TDM-GCC C++ compiler
-if not "%1"=="" (
+if not [%1]==[] (
   if not defined DEVCPP (
     set DEVCPP=%1
     set PATH=%PATH%;%1\TDM-GCC-64\bin

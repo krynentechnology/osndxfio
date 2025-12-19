@@ -1,6 +1,6 @@
 echo off
 :: make file for Borland C++ compiler
-if not "%1"=="" (
+if not [%1]==[] (
   if not defined BCC55 (
     set BCC55=%1
     set PATH=%PATH%;%1\bin

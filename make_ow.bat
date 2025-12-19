@@ -1,6 +1,6 @@
 echo off
 :: make file for Open Watcom C++ compiler
-if not "%1"=="" (
+if not [%1]==[] (
   if not defined WATCOM (
     set WATCOM=%1
     set PATH=%PATH%;%1\binnt;%1\binw
